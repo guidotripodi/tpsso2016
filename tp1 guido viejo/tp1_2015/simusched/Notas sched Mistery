@@ -1,0 +1,3 @@
+Los argumentos son una cola de quantum, la primera vez las tareas corren con quantum 1. De ahi en mas las tareas corren 1 vez con cada quantum de la cola hasta el ultimo elemento que va a ser el quantum a utilizar por el sched de ahi en mas.
+Si la tarea empieza mas tarde cuando le toque va a tener quantums acumulados
+Con respecto a los bloqueos, cuando una tarea se bloquea se desaloja, al terminar su bloqueo se le da 1 tick de reloj para que corra por si tiene que realizar una nueva tarea bloqueante, si es asi se vuelve a bloquear y sino en el proximo tick corre la tarea que le correspondia en un principio

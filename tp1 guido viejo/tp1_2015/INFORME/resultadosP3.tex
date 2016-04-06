@@ -1,0 +1,14 @@
+
+\subsubsection[]{Ejercicio 8}
+\indent \indent La idea central de esta version de Round-Robin es que no permita migración entre núcleos y esto se basa en utilizar una cola FIFO por cada núcleo, donde se encolarán aquellas tareas a las que se asignó el core correspondiente. \\ 
+\indent Para implementar este algoritmo, el Round-Robin 2, utilizamos varias estructuras. Estas son:\\
+\begin{itemize}
+\item Los vectores $quantum$ y $quantumActual$, que cumplen la misma función que en nuestra implementación de Round-Robin.\\
+\item El vector de colas $colas$, donde en la posición $i$ se encontrará la cola de tareas correspondiente a ese núcleo de procesamiento.\\
+\item El diccionario $bloqueados$, donde mantenemos aquellas tareas que se bloquearon con su número de core correspondiente y que nos permitirá, cuando la tarea se desbloquee, reubicarla en la cola del core que le corresponde.\\ 
+\item El vector de enteros $cantidad$, cuya única función será tener en la posición $i$ la cantidad de tareas bloqueadas, activas o en estado ready que están asignadas al core $i$ y que nos servirá para determinar a qué núcleo se asignará una tarea al momento de cargarla.\\
+\end{itemize}
+
+\indent \indent Cuando se carga una tarea, se chequea cuál es el core que menor cantidad de procesos activos totales tiene asignados(haciendo uso de la posición respectiva del vector $cantidad$). Una vez que se obtiene dicho núcleo, se agrega la tarea a la cola de tareas correspondiente al core y se actualiza la cantidad de tareas activas para ese núcleo sumándole uno.\\
+\indent \indent Al bloquearse una tarea, se define una entrada en el diccionario $bloqueados$ con el pid y el núcleo correspondiente. De esta manera, al desbloquearse, obtenemos el core en el que debe correr, eliminamos la entrada del diccionario y encolamos nuevamente el pid a la cola del núcleo en cuestión. De esta manera resolvemos parcialmente el problema de no permitir la migración entre cores.\\
+\indent \indent Finalmente, cuando una tarea termina, se actualiza la cantidad correspondiente al núcleo restándole uno. Solamente a la hora de cargar la tarea y cuando una tarea termina se modifica dicha variable. De esta manera, aunque una tarea se bloquee seguirá reflejada en la cantidad del núcleo, lo que nos permitirá seguir el criterio que nos pidieron en la consigna a la hora de asignarle un core a la tarea.\\
