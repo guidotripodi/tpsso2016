@@ -1,0 +1,187 @@
+
+\subsection{Ejercicios}
+\begin{itemize}
+ \item \textbf{Ejercicio 1 } Programar un tipo de tarea TaskConsola, que simular\'{a} una tarea interactiva.
+La tarea debe realizar n llamadas bloqueantes, cada una de una duraci\'{o}n al azar 1 entre bmin
+y bmax (inclusive). La tarea debe recibir tres par\'{a}metros: n, bmin y bmax (en ese orden)
+que ser\'{a}n interpretados como los tres elementos del vector de enteros que recibe la funci\'{o}n.
+Explique la implementaci\'{o}n realizada y grafique un lote que utilice el nuevo tipo de tarea.
+\item \textbf{Ejercicio 2} Rolando, uno de los investigadores del departamento, utiliza su computadora
+para correr un algoritmo muy complejo que hace un uso intensivo de la CPU por 100 ciclos
+y no utiliza ninguna llamada bloqueante. Mientras corre su algoritmo suele poner su canci\'{o}n
+preferida y luego navegar por internet (estas tareas realizan 20 y 25 llamadas bloqueantes
+respect\'{i}vamente con una duraci\'{o}n variable entre 2 y 4 ciclos).\\
+Escribir el lote de tareas que simule la situaci\'{o}n de Rolando. Ejecutar y graficar la simulaci\'{o}n
+usando el algoritmo FCFS para 1 y 2 n\'{u}cleos con un cambio de contexto de 4 ciclos.\\
+Calcular la latencia de cada tarea en los dos gr\'{a}ficos. Explicar que desventaja tendrıa Rolando
+si debe mantener este algoritmo de scheduling y solo tiene disponible una computadora con un
+n\'{u}cleo (haga referencia a los gr\'{a}ficos y a los c\'{a}lculos anteriores para justificar su explicaci\'{o}n).
+\item \textbf{Ejercicio 3} Programar un tipo de tarea TaskBatch que reciba dos par\'{a}metros: total cpu y
+cant bloqueos. Una tarea de este tipo debera realizar cant bloqueos llamadas bloqueantes, en
+momentos elegidos pseudoaleatoriamente. En cada tal ocasi\'{o}n, la tarea deber\'{a} permanecer
+bloqueada durante exactamente un (1) ciclo de reloj. \\
+El tiempo de CPU total que utilice una
+tarea TaskBatch deber\'{a} ser de total cpu ciclos de reloj (incluyendo el tiempo utilizado para
+lanzar las llamadas bloqueantes; no as\'{i} el tiempo en que la tarea permanezca bloqueada).
+Explique la implementaci\'{o}n realizada y grafique un lote que utilice 3 tareas TaskBatch con
+par\'{a}metros diferentes y que corra con el scheduler FCFS.
+\end{itemize}
+
+\subsection{Resultados y Conclusiones}
+
+\subsubsection[Resolución Ejercicio 1]{Ejercicio 1}
+
+\indent Dada la simpleza del código, optamos por mostrar nuestra implementación, en vez de comentarlo detalladamente.\\
+\indent Realizamos un ciclo de i \textless \ params[0], donde utilizamos la función dada por la catedra, uso\_IO a la cual le pasamos
+el pid correspondiente y un entero ciclos que es el valor random obtenido entre $bmin$ y $bmax$. Esa función uso\_IO simula una llamada bloqueante.
+\begin{center}
+ \begin{verbatim}
+                     ciclos = rand() % (params[2] - params[1] + 1) + params[1];
+ \end{verbatim}
+
+\end{center}
+
+\indent A continuaci\'{o}n, el c\'{o}digo mencionado:
+
+\begin{verbatim}
+
+                  void TaskConsola(int pid, vector<int> params) {
+                       int i, ciclos;              
+                       for (i = 0; i < params[0]; i++) {
+                              ciclos = rand() % (params[2] - params[1] + 1) + params[1];  
+                              uso_IO(pid, ciclos);
+                       }
+                  } 
+
+\end{verbatim}
+
+\indent Como experimentaci\'{o}n trabajamos con el siguiente lote:\\
+
+\begin{verbatim}
+                              TaskConsola 5 3 7
+                              TaskConsola 2 3 3
+                              TaskConsola 15 2 7
+\end{verbatim}
+
+De aqu\'{i}, obtuvimos los siguientes resultados:\\
+
+\vspace*{0.3cm} \vspace*{0.3cm}
+  \begin{center}
+ \includegraphics[scale=0.5]{./Test/ej1.png}
+ { $Grafico 1$ Scheduler FCFS - 1 core }
+ \end{center}
+  \vspace*{0.3cm}
+
+
+
+\subsubsection[Resolución Ejercicio 2]{Ejercicio 2}
+
+\indent Para este punto, utilizamos el siguiente lote de tareas:
+\begin{verbatim}
+ 
+                                     TaskCPU 100
+                                     TaskConsola 20 2 4
+                                     TaskConsola 25 2 4
+
+
+\end{verbatim}
+
+\indent El mismo, presenta una tarea de uso intensivo $TaskCPU$ que dura 100 ticks, y otras dos interactivas, las cuales se
+bloquean 20 y 25 veces respectivamente con una duración de entre 2 y 4 tanto para la primera como la segunda.\\
+A continuación, los respectivos gráficos de mediciones.
+
+
+\vspace*{0.3cm} \vspace*{0.3cm}
+  \begin{center}
+ \includegraphics[scale=0.5]{./Test/ej2_1.png}
+ { $Grafico 1$ Scheduler FCFS - 1 core }
+ \end{center}
+  \vspace*{0.3cm}
+ 
+  
+\vspace*{0.3cm} \vspace*{0.3cm}
+  \begin{center}
+ \includegraphics[scale=0.5]{./Test/ej2_2.png}
+ { $Grafico 2$ Scheduler FCFS - 2 core }
+ \end{center}
+  \vspace*{0.3cm}
+
+A su vez, se nos solicit\'{o} el c\'{a}lculo de la Latencia para cada una de las tareas bas\'{a}ndonos en la 
+experimentaci\'{o}n con uno y dos cores.\\
+
+\textbf{Latencia:} Tiempo que demora una tarea en ejecutarse desde que la misma esta en estado $Ready$.\\
+
+\indent Para el gr\'{a}fico uno, los valores obtenidos para cada tarea fueron los siguientes:\\
+
+\begin{itemize}
+ \item Tarea 0: 4
+ \item Tarea 1: 109
+ \item Tarea 2: 193
+\end{itemize}
+
+\indent Para el gr\'{a}fico dos, los valores obtenidos para cada tarea fueron los siguientes:\\
+
+\begin{itemize}
+ \item Tarea 0: 4
+ \item Tarea 1: 4
+ \item Tarea 2: 88
+\end{itemize}
+
+\indent Se puede observar como aumenta el paralelismo a mayor cantidad de núcleos. 
+En este scheduler en particular, esto ayuda de gran manera al rendimiento del sistema. Si Rolando 
+continuara usando el scheduler FCFS no podr\'{\i}a ejecutar otra tarea hasta que terminara de correr 
+la anterior. Las consecuencias de este comportamiento son visibles en los 2 graficos. Con un \'{u}nico core, 
+solo se puede correr una tarea por vez, en este experimento comparado con usar 2 cores el tiempo se duplica.\\
+
+\subsubsection[Resolución Ejercicio 3]{Ejercicio 3}
+
+\indent Al igual que con la tarea TaskConsola, mencionaremos nuestro implementación y por consiguiente  
+explicaremos ciertos puntos de la misma.\\
+ \begin{verbatim}
+                       void TaskBatch(int pid, vector<int> params) {
+                            int total_cpu = params[0];
+                            int cant_bloqueos = params[1];
+                            vector<bool> uso = vector<bool>(total_cpu);
+                            for(int i=0;i<(int)uso.size();i++) 
+                               uso[i] = false;
+	                    for(int i=0;i<cant_bloqueos;i++) {
+			      int j = rand()%(uso.size());
+                              if(!uso[j])
+				uso[j] = true;
+			      else
+				i--; 
+                            }
+                            for(int i=0;i<(int)uso.size();i++) {
+                                if( uso[i] )
+                                    uso_IO(pid,1); 
+                                else
+                                    uso_CPU(pid, 1); 
+                               }
+                            }
+ \end{verbatim}
+
+ \indent Para este tipo de tarea, creamos un vector de tamaño igual a $total\_cpu$ el cual que contiene valores booleanos, 
+ ya sea true o false dependiendo del uso que se le de dentro de la tarea, ya sea uso\_IO o uso\_CPU. En caso de ser 
+ uso\_IO sera true, y sino false.\\
+ Luego, utilizaremos un ciclo que irá desde 0 hasta el tamaño del vector y dependiendo el valor booleano, usará la funciones
+ dadas por la catedra uso\_IO o uso\_CPU.\\
+ 
+ \indent El experimento realizado para este nuevo tipo de tarea fue el siguiente:\\
+ 
+ Con un lote de tareas:\\
+ 
+ \begin{verbatim}
+                           TaskBatch 10 3
+                           TaskBatch 5 4
+                           TaskBatch 8 1
+ \end{verbatim}
+
+ Obtuvimos el siguiente diagrama:\\
+ 
+ \vspace*{0.3cm} \vspace*{0.3cm}
+  \begin{center}
+ \includegraphics[scale=0.5]{./Test/ej3.png}
+ { $Grafico 1$ Scheduler FCFS - 1 core }
+ \end{center}
+  \vspace*{0.3cm}
+ 
