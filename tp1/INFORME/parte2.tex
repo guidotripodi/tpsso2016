@@ -105,13 +105,11 @@ Cuando el proceso se desbloquee, ser\'a encolada nuevamente al final de dicha co
 \indent Para corroborar que el comportamiento era el deseado, nos solicitaron 1 lotes de tareas compuestos por tareas
 del tipo $taskConsola$ y $taskCpu$, trabajando con 1 cores y utilizando distintos $quantum$ para cada uno de los mismos.\\
 
-ACA TENDRIAMOS QUE MODIFICAR EL LOTE Y HACER DE NUEVO LA MEDICION!
-
 
 El lote de tareas fue el siguiente:
 \begin{verbatim}
-                                   *3 TaskCPU 50
-                                   *2 TaskConsola 5 3 3
+                                   *3 TaskCPU 70
+                                   *2 TaskConsola 3 3 3
 \end{verbatim}
 
 Obteniendo los siguientes resultados:
@@ -119,41 +117,41 @@ Obteniendo los siguientes resultados:
 \begin{center}
 
     
-	\includegraphics[width=450pt]{./Test/ej5_2.png}
+	\includegraphics[width=450pt]{ej5quantum2.png}
 	{$Gr$\'a$fico 5.1 Lote 1$ - Scheduler RR - 1 core - 2 quantum}	
  
 \end{center}
 
 \indent Latencia:\
 \begin{itemize}
- \item Tarea 0: 2
- \item Tarea 1: 6
- \item Tarea 2: 10
- \item Tarea 3: 14
- \item Tarea 4: 18
- \item PROMEDIO: 10
+ \item Tarea 0: 1
+ \item Tarea 1: 5
+ \item Tarea 2: 9
+ \item Tarea 3: 13
+ \item Tarea 4: 16
+ \item PROMEDIO: 8.8
 \end{itemize}
 \indent Waiting time:\
 \begin{itemize}
- \item Tarea 0: 289
- \item Tarea 1: 292
- \item Tarea 2: 295
- \item Tarea 3: 84
- \item Tarea 4: 87
- \item PROMEDIO: 209,4
+ \item Tarea 0: 377
+ \item Tarea 1: 380
+ \item Tarea 2: 383
+ \item Tarea 3: 59
+ \item Tarea 4: 62
+ \item PROMEDIO: 252.2
 \end{itemize}
 \indent Tiempo total de ejecuci\'{o}n:\
 \begin{itemize}
- \item Tarea 0: 339
- \item Tarea 1: 342
- \item Tarea 2: 345
- \item Tarea 3: 105
- \item Tarea 4: 108
- \item PROMEDIO: 247,8
+ \item Tarea 0: 447
+ \item Tarea 1: 450
+ \item Tarea 2: 453
+ \item Tarea 3: 69
+ \item Tarea 4: 72
+ \item PROMEDIO: 298.2
 \end{itemize}
 
 \begin{center}
-  	\includegraphics[width=450pt]{./Test/ej5_10.png}
+  	\includegraphics[width=450pt]{ej5quantum10.png}
 	  {$Gr$\'a$fico 5.2 - Lote 1$ - Scheduler RR - 1 core - 10 quantum}	
 \end{center}
 
@@ -168,25 +166,25 @@ Obteniendo los siguientes resultados:
 \end{itemize}
 \indent Waiting time:\
 \begin{itemize}
- \item Tarea 0: 162
- \item Tarea 1: 165
- \item Tarea 2: 198
- \item Tarea 3: 201
- \item Tarea 4: 204
- \item PROMEDIO: 186
+ \item Tarea 0: 209
+ \item Tarea 1: 212
+ \item Tarea 2: 215
+ \item Tarea 3: 155
+ \item Tarea 4: 158
+ \item PROMEDIO: 189.8
 \end{itemize}
 \indent Tiempo total de ejecuci\'{o}n:\
 \begin{itemize}
- \item Tarea 0: 213
- \item Tarea 1: 216
- \item Tarea 2: 219
- \item Tarea 3: 222
- \item Tarea 4: 225
- \item PROMEDIO: 219
+ \item Tarea 0: 279
+ \item Tarea 1: 282
+ \item Tarea 2: 285
+ \item Tarea 3: 165
+ \item Tarea 4: 168
+ \item PROMEDIO: 235.8
 \end{itemize}
 
 \begin{center}
-  	\includegraphics[width=450pt]{./Test/ej5_50.png}
+  	\includegraphics[width=450pt]{ej5quantum50.png}
 	  {$Gr$\'a$fico 5.3 - Lote 1$ - Scheduler RR - 1 core - 50 quantum}	
 \end{center}
 
@@ -201,21 +199,21 @@ Obteniendo los siguientes resultados:
 \end{itemize}
 \indent Waiting time:\
 \begin{itemize}
- \item Tarea 0: 114
- \item Tarea 1: 117
- \item Tarea 2: 120
- \item Tarea 3: 177
- \item Tarea 4: 180
- \item PROMEDIO: 141,6
+ \item Tarea 0: 115
+ \item Tarea 1: 138
+ \item Tarea 2: 161
+ \item Tarea 3: 236
+ \item Tarea 4: 239
+ \item PROMEDIO: 177.8
 \end{itemize}
 \indent Tiempo total de ejecuci\'{o}n:\
 \begin{itemize}
- \item Tarea 0: 165
- \item Tarea 1: 168
- \item Tarea 2: 171
- \item Tarea 3: 198
- \item Tarea 4: 201
- \item PROMEDIO: 180,6
+ \item Tarea 0: 185
+ \item Tarea 1: 208
+ \item Tarea 2: 231
+ \item Tarea 3: 246
+ \item Tarea 4: 249
+ \item PROMEDIO: 223.8
 \end{itemize}
 
 \indent
@@ -246,18 +244,16 @@ estén en condiciones de correr serán ejecutadas y ninguna será negada de tiem
 
 \subsubsection[Resolución Ejercicio 6]{Ejercicio 6}
 
-
-ACA HAY QUE MODIFICAR EL LOTE, COMO NO CAMBIA CASI NADA EL LOTE LOS RESULTADOS VAN A SER LO MISMO, SOLO HAY Q CAMBIAR EL GRAFICO!
 El lote de tareas solicitado fue el siguiente:
 \begin{verbatim}
-                                   *3 TaskCPU 50
-                                   *2 TaskConsola 5 3 3
+                                   *3 TaskCPU 70
+                                   *2 TaskConsola 3 3 3
 \end{verbatim}
 
 Obteniendo los siguientes resultados:
 
 \begin{center}
-  	\includegraphics[width=450pt]{./Test/ej6.png}
+  	\includegraphics[width=450pt]{ej6.png}
 	  {$Gr$\'a$fico 6.1 - Lote 1$ - Scheduler FCFS - 1 core}	
 \end{center}
 
@@ -367,13 +363,17 @@ quantum.
 \end{enumerate}
 
 A continuación explicaremos por partes el c\'{o}digo de nuestro scheduler.\\
+
 Cuando inicializa lo primero que hacemos mediante un ciclo for es guardar los quantums pasados por par\'{a}metro dentro de la 
 secuencia $quantum$ y al mismo tiempo se van creando colas vacias en la secuencia $colasXQuantum$.\\
+
 Cuando una nueva tarea es cargada esta se encola en el primer quantum de la lista y se crea una asociaci\'{o}n de dicha tarea 
 con el número del quantum de la lista en el diccionario $pid$\_$quantum$.\\
+
 En el momento en que una tarea se desbloquea nos fijamos cual fue el \'{u}ltimo quantum que corrió de la lista y si este no es 
 el primero se la encola en la cola del quantum anterior, caso contrario se la encola en el mismo quantum que corrio la \'{u}ltima vez.
 Por \'{u}ltimo se actualiza en caso de ser necesario la cola actual en el diccionario $pid$\_$quantum$.\\
+
 En cada tick de reloj nos fijamos si la tarea termina, se bloquea o corre normalmente. En caso de que termine o se bloquee usamos 
 la funci\'{o}n $next(cpu)$ ( mas adelante explicaremos que hace esta funci\'{o}n) para saber cual es la pr\'{o}xima 
 tarea a correr. \\Si es un tick normal de reloj nos fijamos, si la tarea que esta corriendo es la IDLE, primero verificamos si hay 
@@ -382,9 +382,11 @@ no hay tareas seguimos corriendo la IDLE. Si la tarea que se esta ejecutando no 
 si este llego a 0, en caso de no ser as\'{\i} se devuelve la misma tarea. Si este llego a 0 nos fijamos que quantum de la lista 
 termino de correr, en caso de que no sea el \'{u}ltimo, se actualiza el dato en el diccionario $pid$\_$quantum$ con el siguiente y 
 se encola en la cola correspondiente a este quantum y devolvemos la pr\'{o}xima tarea a ejecutar.\\
+
 La funci\'{o}n $next(cpu)$ busca de todas las colas de los quantums cual es la primera que no este vac\'{\i}a, se saca el 
 primer elemento de la cola y la funci\'{o}n lo devuelve. Adem\'{a}s guarda en la variable $quantumActual$ el quantum de la cola 
 donde extrajimos la tarea.\\
+
 Por \'{u}ltimo la funci\'{o}n $colasVacias()$ revisa todas las colas de los quantums y devuelve un valor booleano dependiendo si 
 estan todas vacias (devuelve 1) o si hay alguna que contenga al menos una tarea en cuyo caso devuelve 0.\\
 

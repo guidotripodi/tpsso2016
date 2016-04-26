@@ -1,0 +1,5 @@
+TaskCPU 40
+TaskBatch 10 5
+TaskCPU 50
+TaskBatch 15 8
+TaskCPU 10
