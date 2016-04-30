@@ -12,7 +12,7 @@ con 3 llamadas bloqueantes de 3 ciclos de duraci\'{o}n cada una. Ejecutar y graf
 utilizando el scheduler Round-Robin con quantum 2, 10 y 50.\\
 Con un cambio de contexto de 2 ciclos y un solo n\'{u}cleo calcular la latencia, el waiting
 time y el tiempo total de ejecuci\'{o}n de las cinco tareas para cada quantum. 
-¿En cual es mejor cada uno? ¿Por qu\'{e} ocurre esto?
+¿En cu\'{a}l es mejor cada uno? ¿Por qu\'{e} ocurre esto?
 \item \textbf{Ejercicio 6} Grafique el mismo lote de tareas del ejercicio anterior para el scheduler FCFS.
 Haciendo referencia a lo que se observa en los gr\'{a}ficos de este ejercicio y el anterior, explique
 las diferencias entre un scheduler Round-Robin y un FCFS.
@@ -32,7 +32,7 @@ de un proceso (load). El n\'{u}cleo correspondiente a un nuevo proceso ser\'{} a
 con menor cantidad de procesos activos totales (RUNNING + BLOCKED + READY).Explique un escenario real 
 donde la migraci\'{o}n de n\'{u}cleos sea beneficiosa y uno donde no (mencione
 espec\'{i}ficamente que m\'{e}tricas de comparaci\'{o}n vistas en la materia mejorarıan en cada caso).
-Disene un lote de tareas en nuestro simulador que represente a cada uno de esos escenarios
+Dise\~{n}e un lote de tareas en nuestro simulador que represente a cada uno de esos escenarios
 y grafique su resultado para cada implementaci\'{o}n. Calcule y compare en cada gr\'{a}fico las
 m\'{e}tricas que menciono.
 
@@ -46,7 +46,7 @@ Para desarrollar la implementación del scheduler $Round-Robin$ y que \'{e}ste f
 utilizamos una serie de estructuras puntuales. \\
 Las mismas son las siguientes:\\
 \begin{enumerate}
- \item Una cola global, la cual nombramos $q$, esta contiene los $PID$ de los procesos activos que no est\'{a}n
+ \item Una cola global, la cual nombramos $q$, \'{e}sta contiene los $PID$ de los procesos activos que no est\'{a}n
  bloqueados y en el tope de la misma se encuentra el próximo proceso a correr. Esta cola,
  fue desarrollada para que cuando se desaloje un proceso por finalizar su $quantum$ la misma pase al final de
  la cola y generando el ciclo acorde al comportamiento de este scheduler.
@@ -75,7 +75,7 @@ señal de unblock, la tarea desalojada regresará al final de la cola global.
 
     
 	\includegraphics[width=450pt]{./Test/Ej4.png}
-	{$Gr$\'a$fico 4.1 - Lote 1$ - Scheduler RR - 1 core - 5 quantum}	
+	{$Gr$\'a$fico \ 4.1 - Lote \ 1$ - Scheduler RR - 1 core - 5 quantum}	
  
 \end{center}
 
@@ -118,7 +118,7 @@ Obteniendo los siguientes resultados:
 
     
 	\includegraphics[width=450pt]{ej5quantum2.png}
-	{$Gr$\'a$fico 5.1 Lote 1$ - Scheduler RR - 1 core - 2 quantum}	
+	{$Gr$\'a$fico \ 5.1 \ Lote \ 1$ - Scheduler RR - 1 core - 2 quantum}	
  
 \end{center}
 
@@ -152,7 +152,7 @@ Obteniendo los siguientes resultados:
 
 \begin{center}
   	\includegraphics[width=450pt]{ej5quantum10.png}
-	  {$Gr$\'a$fico 5.2 - Lote 1$ - Scheduler RR - 1 core - 10 quantum}	
+	  {$Gr$\'a$fico \ 5.2 - Lote \ 1$ - Scheduler RR - 1 core - 10 quantum}	
 \end{center}
 
 \indent Latencia:\
@@ -185,7 +185,7 @@ Obteniendo los siguientes resultados:
 
 \begin{center}
   	\includegraphics[width=450pt]{ej5quantum50.png}
-	  {$Gr$\'a$fico 5.3 - Lote 1$ - Scheduler RR - 1 core - 50 quantum}	
+	  {$Gr$\'a$fico \ 5.3 - Lote \ 1$ - Scheduler RR - 1 core - 50 quantum}	
 \end{center}
 
 \indent Latencia:\
@@ -254,7 +254,7 @@ Obteniendo los siguientes resultados:
 
 \begin{center}
   	\includegraphics[width=450pt]{ej6.png}
-	  {$Gr$\'a$fico 6.1 - Lote 1$ - Scheduler FCFS - 1 core}	
+	  {$Gr$\'a$fico \ 6.1 - Lote \ 1$ - Scheduler FCFS - 1 core}	
 \end{center}
 
 \indent A modo de an\'alisis, hemos obtenido las siguientes conclusiones:\\
@@ -293,7 +293,7 @@ TaskConsola 4 2 3
 Obteniendo lo siguiente:
 \begin{center}
     	\includegraphics[width=450pt]{./Test/ej7_1.png}
-	{$Gr$\'a$fico 7.1 - Lote 1$ - Sched Mistery - 1 core - Quantum = 6}	
+	{$Gr$\'a$fico \ 7.1 - Lote \ 1$ - Sched Mistery - 1 core - Quantum = 6}	
  \end{center}
  
 De aqu\'{\i}, pudimos deducir que una tarea al bloquearse es desalojada y cuando la misma se desbloquea, el scheduler, le da 
@@ -310,7 +310,7 @@ TaskAlterno 1 1 1 1 1 1 15 1 1 1 1
 Obteniendo lo siguiente:
 \begin{center}
     	\includegraphics[width=450pt]{./Test/ej7_2.png}
-	{$Gr$\'a$fico 7.2 - Lote 1$ - Sched Mistery - 1 core - Quantum = 2 - 5 - 7}	
+	{$Gr$\'a$fico \ 7.2 - Lote \ 1$ - Sched Mistery - 1 core - Quantum = 2 - 5 - 7}	
  \end{center}
 
 Con este lote lo primero que se observa es que los par\'{a}metros pasados al scheduler van a ser una lista de quantums 
@@ -332,7 +332,7 @@ Con el siguiente lote:\\
 Obteniendo lo siguiente:\\
 \begin{center}
     	\includegraphics[width=450pt]{./Test/ej7_3.png}
-	{$Gr$\'a$afico 7.2 - Lote 2$ - Sched Mistery - 1 core - Quantum = 5 3 2}	
+	{$Gr$\'a$fico \ 7.2 - Lote \ 2$ - Sched Mistery - 1 core - Quantum = 5 3 2}	
  \end{center}
  
 De aqu\'{\i}, pudimos observar, que si una tarea entra m\'{a}s tarde corre los quantums que ya pasaron de la lista. Esto da 
@@ -357,12 +357,12 @@ Las mismas son las siguientes:\\
 \item Un vector de enteros llamado $quantum$, esta secuencia contiene en orden el valor de cada quantum pasado por par\'{a}metro.
 \item Vector de colas de enteros de nombre $colasXQuantum$. Cada \'{i}ndice de la secuencia es una cola perteneciente a los quantum 
 que se pasaron por par\'{a}metro. Estas colas tienen las tareas a ejecutar de cada quantum.
-\item Un diccionario $pid$\_$quantum$ que dado el pid de una tarea me dice que quantum de la lista es el que tiene que correr.
-\item Una funci\'{o}n auxiliar llamada $colasVacias$ que devuelve un valor booleano si no hay mas tareas en ninguna cola de los 
+\item Un diccionario $pid$\_$quantum$ que dado el pid de una tarea me dice qu\'{e} quantum de la lista es el que tiene que correr.
+\item Una funci\'{o}n auxiliar llamada $colasVacias$ que devuelve un valor booleano si no hay m\'{a}s tareas en ninguna cola de los 
 quantum.
 \end{enumerate}
 
-A continuación explicaremos por partes el c\'{o}digo de nuestro scheduler.\\
+A continuaci\'{o}n explicaremos por partes el c\'{o}digo de nuestro scheduler.\\
 
 Cuando inicializa lo primero que hacemos mediante un ciclo for es guardar los quantums pasados por par\'{a}metro dentro de la 
 secuencia $quantum$ y al mismo tiempo se van creando colas vacias en la secuencia $colasXQuantum$.\\
@@ -453,12 +453,12 @@ Obteniendo los siguientes datos relevantes:\\
 
 \begin{center}
     	\includegraphics[width=450pt]{./EJ8_RR2/dif10corerr.png}
-	{$Gr$\'a$fico 8.1 -Lote 3$ - Round Robin - 2 core - Quantum = 5 - cambio de contexto = 1}	
+	{$Gr$\'a$fico \ 8.1 -Lote \ 3$ - Round Robin - 2 core - Quantum = 5 - cambio de contexto = 1}	
  \end{center}
  
  \begin{center}
     	\includegraphics[width=450pt]{./EJ8_RR2/dif10corerr2.png}
-	{$Gr$\'a$fico 8.2 - Lote 3$ - Round Robin 2 - 2 core - Quantum = 5 - cambio de contexto = 1}	
+	{$Gr$\'a$fico \ 8.2 - Lote \ 3$ - Round Robin 2 - 2 core - Quantum = 5 - cambio de contexto = 1}	
  \end{center}
  
  Se puede ver en estos diagramas como la implementación del Round Robin original trabaja
@@ -489,12 +489,12 @@ Para esto,un lotes de tareas que ejemplifica lo dicho puede ser el siguiente:\\
 
    \begin{center}
     	\includegraphics[width=450pt]{./EJ8_RR2/dif5corerr.png}
-	{$Gr$\'a$fico 8.3 - Lote 3$ - Round Robin - 2 core - Quantum = 3 - cambio de contexto = 1}	
+	{$Gr$\'a$fico \ 8.3 - Lote \ 3$ - Round Robin - 2 core - Quantum = 3 - cambio de contexto = 1}	
  \end{center}
  
  \begin{center}
     	\includegraphics[width=450pt]{./EJ8_RR2/dif5corerr2.png}
-	{$Gr$\'a$fico 8.4 - Lote 3$ - Round Robin 2 - 2 core - Quantum = 3 - cambio de contexto = 1}	
+	{$Gr$\'a$fico \ 8.4 - Lote \ 3$ - Round Robin 2 - 2 core - Quantum = 3 - cambio de contexto = 1}	
  \end{center}
 
  Se puede observar por los diagramas como el RR2 tiene una mejor performance en este estilo
