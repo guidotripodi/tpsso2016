@@ -1,0 +1,10 @@
+\contentsline {section}{\numberline {1}Desarrollo y Resultados}{3}
+\contentsline {section}{\numberline {2}Parte I \IeC {\textendash } Desarrollo de Read-Write Lock}{3}
+\contentsline {subsection}{\numberline {2.1}Ejercicios}{3}
+\contentsline {subsection}{\numberline {2.2}Resultados y Conclusiones}{3}
+\contentsline {subsubsection}{\numberline {2.2.1}Resoluci\IeC {\'o}n Ejercicio 1}{3}
+\contentsline {section}{\numberline {3}Parte II: Desarrollo de Backend Multithreaded}{5}
+\contentsline {subsection}{\numberline {3.1}Ejercicios}{5}
+\contentsline {subsection}{\numberline {3.2}Resultados y Conclusiones}{5}
+\contentsline {subsubsection}{\numberline {3.2.1}Resoluci\IeC {\'o}n Ejercicio 2}{5}
+\contentsline {section}{\numberline {4}Bibliograf\IeC {\'\i }a}{7}

@@ -1,0 +1,86 @@
+
+\subsection{Ejercicios}
+\begin{itemize}
+ \item 
+\textbf{Ejercicio 2}
+En segundo lugar, deberán implementar el servidor de backend multithreaded inspirándose en el código provisto y lo 
+desarrollado en el punto anterior.
+\end{itemize}
+
+\subsection{Resultados y Conclusiones}
+
+
+\subsubsection[Resolución Ejercicio 2]{Ejercicio 3}
+
+\indent En este Ejercicio, se solicito la implementación de un backend mutithreaded, para el desarrollo del mismo,
+utilizamos la base del backend mono para la conexion con el servidor, el parseo de las fichas, tanto para la validez de las mismas
+y tambien el envio de dimensiones del tablero de juego.\\
+
+Utilizamos la función $atendedor\_de\_jugador$ la cual la convertimos en un thread para cada jugador. Esta función es llamada desde
+la función main cuando las conexiones del socket entre el cliente-servidor son correctas. \\
+Convertimos la función enunciada de la siguiente manera:\\
+\begin{verbatim}
+ pthread_create(&threads[i], NULL, &atendedor_de_jugador, (void *)&td[i]);
+\end{verbatim}
+
+En donde, threads es un arreglo de thread$\_$t y se le asigna uno a cada jugador y td es un arreglo de una estructura creada por
+nosotros la cual contiene:
+\begin{itemize}
+ \item socket$\_$cliente$\_$struct Este es el socket correspondiente a cada jugador
+ \item rw$\_$lock Esto es un read-write-lock que tendra cada jugador
+\end{itemize}
+
+Con esta estructura, la cual es creada fuera del ciclo en el que se cargan todos los jugadores, y luego por cada iteracion 
+del ciclo se va guardando el socket y rw$\_$lock correspondiente.\\
+De esta forma, vamos creando cada thread con sus respectivos socket y rw\_lock.\\
+
+A continuación, mostraremos esta sección de código:\\
+\begin{verbatim}
+\*creacion de arreglo de threads y arreglo de estructuras thread_data *\
+
+                      pthread_t threads[NUM_THREADS];
+                      struct thread_data td[NUM_THREADS];
+                      
+\* carga por cada iteracion de ciclo y creacion del thread *\
+
+                      td[i].socket_cliente_struct = socketfd_cliente;
+                      td[i].rw_lock = read_write_lock;
+                      pthread_create(&threads[i], NULL, &atendedor_de_jugador, (void *)&td[i]);
+                      i++;
+\end{verbatim}
+
+Luego, en la función $atendedor\_de\_jugador$ la cual recibe un thread$\_$data lo guardamos en un puntero a thread$\_$data llamado
+my$\_$data y creamos un entero llamado socket$\_$fd el socket que nos viene como parametro.\\
+
+Luego, basandonos en el backend mono, realizamos una implementación similar con la particularidad que, en el if donde se
+consulta si el mensaje del jugador es una ficha, palabra o update.\\
+En caso de ser una ficha, luego de parsear el casillero, antes de chequear la validez de la ficha utilizamos nuestro read\_write\_lock y realizamos
+la funcion $rlock()$. En caso de ser una ficha valida, realizamos un read unlock y procedemos a escribir de la siguiente manera:\\
+\begin{verbatim}
+                     my_data->rw_lock.wlock();
+                     palabra_actual.push_back(ficha);
+                     tablero_letras[ficha.fila][ficha.columna] = ficha.letra;
+                     my_data->rw_lock.wunlock(); 
+\end{verbatim}
+Para luego enviar la misma y terminar la jugada. En caso de que la validez de la ficha no sea correcta, dejamos de leer
+y procedemos a escribir para quitar fichas y asi dejar de escribir, como mostramos a continuación:\\
+
+\begin{verbatim}
+                     my_data->rw_lock.runlock();
+                     my_data->rw_lock.wlock();
+                     quitar_letras(palabra_actual);
+                     my_data->rw_lock.wunlock(); 
+\end{verbatim}
+
+Por consiguiente, en caso de que el mensaje sea una palabra se realiza un wlock para escribir la palabra y luego un wunlock.\\
+Finalmente, en caso de ser update se realiza un rlock para actualizar la pantalla y se finaliza la jugada.\\
+
+Fuera de este IF, se finaliza el thread creado con la funcion $pthread_exit(NULL)$.\\
+
+De esta manera, queda implementado nuestro backend multithreaded como fue solicitado.
+
+
+
+
+
+

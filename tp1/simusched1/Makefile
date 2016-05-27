@@ -50,7 +50,7 @@ cleanej2:
 
 ej3: $(ej)
 	mkdir Ejercicio3
-	./simusched ./Lotes/Ej3 1 1 1 SchedFCFS | ./graphsched.py >> ./Ejercicio3/TaskBatch.png
+	./simusched ./Lotes/Ej3 1 0 0 SchedFCFS | ./graphsched.py >> ./Ejercicio3/TaskBatch.png
 
 cleanej3:
 	rm -f $(OBJS) $(MAIN) ./Ejercicio3/TaskBatch.png
@@ -77,7 +77,7 @@ cleanej5:
 
 ej6: $(ej)
 	mkdir Ejercicio6
-	./simusched ./Lotes/Ej6 1 2 1 SchedFCFS | ./graphsched.py >> ./Ejercicio6/FCFS.png
+	./simusched ./Lotes/Ej6 1 2 0 SchedFCFS | ./graphsched.py >> ./Ejercicio6/FCFS.png
 
 cleanej6:
 	rm -f $(OBJS) $(MAIN) ./Ejercicio6/FCFS.png
