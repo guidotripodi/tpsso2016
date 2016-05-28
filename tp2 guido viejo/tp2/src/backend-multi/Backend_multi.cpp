@@ -8,14 +8,15 @@ using namespace std;
 int socket_servidor = -1;
 
 // variables globales del juego
-vector<vector<char> > tablero_letras; // tiene letras que aún no son palabras válidas
-vector<vector<char> > tablero_palabras; // solamente tiene las palabras válidas
+vector<vector<char> > tablero_equipo1; // tiene las fichas del equipo1
+vector<vector<char> > tablero_equipo_2; // tiene las fichas del equipo2
+bool peleando = false;
 unsigned int ancho = -1;
 unsigned int alto = -1;
 
-vector<vector<RWLock> > rwlocks_tablero_letras;
-vector<vector<RWLock> > rwlocks_tablero_palabras;
-RWLock rwlock_tablero_palabras;
+vector<vector<RWLock> > rwlocks_tablero_equipo1;
+vector<vector<RWLock> > rwlocks_tablero_equipo_2;
+RWLock rwlock_tablero_equipo_2;
 
 
 bool cargar_int(const char* numero, unsigned int& n) {
@@ -50,18 +51,18 @@ int main(int argc, const char* argv[]) {
     }
 
     // inicializar ambos tableros, se accede como tablero[fila][columna]
-    tablero_letras = vector<vector<char> >(alto);
-    rwlocks_tablero_letras = vector<vector<RWLock> >(alto);
+    tablero_equipo1 = vector<vector<char> >(alto);
+    rwlocks_tablero_equipo1 = vector<vector<RWLock> >(alto);
     for (unsigned int i = 0; i < alto; ++i) {
-        tablero_letras[i] = vector<char>(ancho, VACIO);
-        rwlocks_tablero_letras[i] = vector<RWLock>(ancho);
+        tablero_equipo1[i] = vector<char>(ancho, VACIO);
+        rwlocks_tablero_equipo1[i] = vector<RWLock>(ancho);
     }
 
-    tablero_palabras = vector<vector<char> >(alto);
-    rwlocks_tablero_palabras = vector<vector<RWLock> >(alto);
+    tablero_equipo_2 = vector<vector<char> >(alto);
+    rwlocks_tablero_equipo_2 = vector<vector<RWLock> >(alto);
     for (unsigned int i = 0; i < alto; ++i) {
-        tablero_palabras[i] = vector<char>(ancho, VACIO);
-        rwlocks_tablero_palabras[i] = vector<RWLock>(ancho);
+        tablero_equipo_2[i] = vector<char>(ancho, VACIO);
+        rwlocks_tablero_equipo_2[i] = vector<RWLock>(ancho);
     }
 
     int socketfd_cliente, socket_size;
@@ -115,84 +116,185 @@ void *atendedor_de_jugador(void *socket_param) {
     int socket_fd = *((int *) socket_param);
 
     // variables locales del jugador
-    char nombre_jugador[21];
-    list<Casillero> palabra_actual; // lista de letras de la palabra aún no confirmada
+    char nombre_equipo[21];
+    list<Casillero> barco_actual; // lista de casilleros que ocupa el barco actual (aún no confirmado)
 
-    if (recibir_nombre(socket_fd, nombre_jugador) != 0) {
+    if (recibir_nombre_equipo(socket_fd, nombre_equipo) != 0) {
         // el cliente cortó la comunicación, o hubo un error. Cerramos todo.
-        terminar_servidor_de_jugador(socket_fd, palabra_actual);
+        terminar_servidor_de_jugador(socket_fd, barco_actual, tablero_equipo1);
     }
 
     if (enviar_dimensiones(socket_fd) != 0) {
         // se produjo un error al enviar. Cerramos todo.
-        terminar_servidor_de_jugador(socket_fd, palabra_actual);
+        terminar_servidor_de_jugador(socket_fd, barco_actual, tablero_equipo1);
     }
 
-    cout << "Esperando que juegue " << nombre_jugador << endl;
+    cout << "Esperando que juegue " << nombre_equipo << endl;
+
+    //Hay un solo equipo, soy siempre el equipo1
+    bool soy_equipo_1 = true;
+
+    vector<vector<char> > *tablero_jugador;
+    vector<vector<char> > *tablero_rival;
+
+    //Veo que tablero usar dependiendo el equipo que soy
+    if(!soy_equipo_1){
+        tablero_jugador = &tablero_equipo2;
+        tablero_rival = &tablero_equipo1;
+    }else{
+        tablero_jugador = &tablero_equipo1;
+        tablero_rival = &tablero_equipo2;
+    }
 
     while (true) {
         // espera una letra o una confirmación de palabra
         char mensaje[MENSAJE_MAXIMO+1];
         int comando = recibir_comando(socket_fd, mensaje);
-        if (comando == MSG_LETRA) {
+        if (comando == MSG_PARTE_BARCO) {
             Casillero ficha;
-            if (parsear_casillero(mensaje, ficha) != 0) {
-                // no es un mensaje LETRA bien formado, hacer de cuenta que nunca llegó
+            if(peleando){
+                if (enviar_error(socket_fd) != 0) {
+                    // se produjo un error al enviar. Cerramos todo.
+                    terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
+                }
+
                 continue;
             }
+
+            if (parsear_barco(mensaje, ficha) != 0) {
+                // no es un mensaje PARTE_BARCO bien formado, hacer de cuenta que nunca llegó
+                continue;
+            }
+
             // ficha contiene la nueva letra a colocar
             // verificar si es una posición válida del tablero
 
-            if (es_ficha_valida_en_palabra(ficha, palabra_actual)) {
-                palabra_actual.push_back(ficha);
+            if (es_ficha_valida_en_palabra(ficha, barco_actual,*tablero_jugador)) {
+                barco_actual.push_back(ficha);
 
-                rwlocks_tablero_letras[ficha.fila][ficha.columna].wlock();
-                tablero_letras[ficha.fila][ficha.columna] = ficha.letra;
-                rwlocks_tablero_letras[ficha.fila][ficha.columna].wunlock();
+                rwlocks_tablero_equipo1[ficha.fila][ficha.columna].wlock();
+                tablero_equipo1[ficha.fila][ficha.columna] = ficha.letra;
+                rwlocks_tablero_equipo1[ficha.fila][ficha.columna].wunlock();
 
                 // OK
                 if (enviar_ok(socket_fd) != 0) {
                     // se produjo un error al enviar. Cerramos todo.
-                    terminar_servidor_de_jugador(socket_fd, palabra_actual);
+                    terminar_servidor_de_jugador(socket_fd, barco_actual,*tablero_jugador);
                 }
             } else {
 
-                quitar_letras(palabra_actual);
+                quitar_partes_barco(barco_actual,*tablero_jugador);
 
                 // ERROR
                 if (enviar_error(socket_fd) != 0) {
                     // se produjo un error al enviar. Cerramos todo.
-                    terminar_servidor_de_jugador(socket_fd, palabra_actual);
+                    terminar_servidor_de_jugador(socket_fd, barco_actual,*tablero_jugador);
                 }
             }
         }
-        else if (comando == MSG_PALABRA) {
+        else if (comando == MSG_LISTO) {
             // bloqueo el tablero para escribir para cuando alguien haga un update no se 
             // lleve el tablero en medio de la escritura
-            rwlock_tablero_palabras.wlock();
+            rwlock_tablero_equipo_2.wlock();
 
             // las letras acumuladas conforman una palabra completa, escribirlas en el tablero de palabras y borrar las letras temporales
-            for (list<Casillero>::const_iterator casillero = palabra_actual.begin(); casillero != palabra_actual.end(); casillero++) {
-                rwlocks_tablero_palabras[casillero->fila][casillero->columna].wlock();
-                tablero_palabras[casillero->fila][casillero->columna] = casillero->letra;
-                rwlocks_tablero_palabras[casillero->fila][casillero->columna].wunlock();
+            for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
+                rwlocks_tablero_equipo_2[casillero->fila][casillero->columna].wlock();
+                tablero_equipo_2[casillero->fila][casillero->columna] = casillero->contenido;
+                rwlocks_tablero_equipo_2[casillero->fila][casillero->columna].wunlock();
             }
-            palabra_actual.clear();
+            barco_actual.clear();
 
             if (enviar_ok(socket_fd) != 0) {
                 // se produjo un error al enviar. Cerramos todo.
-                terminar_servidor_de_jugador(socket_fd, palabra_actual);
+                terminar_servidor_de_jugador(socket_fd, barco_actual,*tablero_jugador);
             }
-            rwlock_tablero_palabras.wunlock();
+            rwlock_tablero_equipo_2.wunlock();
         }
+
+        else if (comando == MSG_BARCO_TERMINADO) {
+
+
+            //Si estoy peleando, no acepto barcos ya
+            if(peleando){
+                if (enviar_error(socket_fd) != 0) {
+                    // se produjo un error al enviar. Cerramos todo.
+                    terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
+                }
+
+                continue;
+            }
+
+            // las partes acumuladas conforman un barco completo, escribirlas en el tablero del jugador y borrar las partes temporales
+            for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
+                (*tablero_jugador)[casillero->fila][casillero->columna] = casillero->contenido;
+            }
+
+            barco_actual.clear();
+
+            if (enviar_ok(socket_fd) != 0) {
+                // se produjo un error al enviar. Cerramos todo.
+                terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
+            }
+        }
+        else if (comando == MSG_BOMBA) {
+            //TODO
+
+            Casillero ficha;
+            if (parsear_bomba(mensaje, ficha) != 0) {
+                // no es un mensaje BOMBA bien formado, hacer de cuenta que nunca llegó
+                continue;
+            }
+
+            // ficha contiene la bomba a tirar
+            // verificar si se está peleando y si es una posición válida del tablero
+            if (peleando && ficha.fila <= alto - 1 && ficha.columna <= ancho - 1) {
+
+                //Si había un BARCO, pongo una BOMBA
+                char contenido = (*tablero_rival)[ficha.fila][ficha.columna];
+
+                if(contenido == BARCO){
+
+                    (*tablero_rival)[ficha.fila][ficha.columna] = BOMBA;
+
+                    if (enviar_golpe(socket_fd) != 0) {
+                        // se produjo un error al enviar. Cerramos todo.
+                        terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
+                    }
+
+                }else if(contenido == BOMBA){
+                    // OK
+                    if (enviar_estaba_golpeado(socket_fd) != 0) {
+                        // se produjo un error al enviar. Cerramos todo.
+                        terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
+                    }
+                }else{
+                    // OK
+                    if (enviar_ok(socket_fd) != 0) {
+                        // se produjo un error al enviar. Cerramos todo.
+                        terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
+                    }
+                }
+            }
+            else {
+                // ERROR
+                if (enviar_error(socket_fd) != 0) {
+                    // se produjo un error al enviar. Cerramos todo.
+                    terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
+                }
+            }
+
+        }
+
+
         else if (comando == MSG_UPDATE) {
             // quiere leer el tablero, no debe escribir nadie mientras
-            rwlock_tablero_palabras.rlock();
+            rwlock_tablero_equipo_2.rlock();
             if (enviar_tablero(socket_fd) != 0) {
                 // se produjo un error al enviar. Cerramos todo.
-                terminar_servidor_de_jugador(socket_fd, palabra_actual);
+                terminar_servidor_de_jugador(socket_fd, barco_actual,*tablero_jugador);
             }
-            rwlock_tablero_palabras.runlock();
+            rwlock_tablero_equipo_2.runlock();
         }
         else if (comando == MSG_INVALID) {
             // no es un mensaje válido, hacer de cuenta que nunca llegó
@@ -200,7 +302,7 @@ void *atendedor_de_jugador(void *socket_param) {
         }
         else {
             // se produjo un error al recibir. Cerramos todo.
-            terminar_servidor_de_jugador(socket_fd, palabra_actual);
+            terminar_servidor_de_jugador(socket_fd, barco_actual,*tablero_jugador);
         }
     }
     pthread_exit(NULL);
@@ -210,24 +312,26 @@ void *atendedor_de_jugador(void *socket_param) {
 
 // mensajes recibidos por el server
 
-int recibir_nombre(int socket_fd, char* nombre) {
+int recibir_nombre_equipo(int socket_fd, char* nombre) {
     char buf[MENSAJE_MAXIMO+1];
 
     if (recibir(socket_fd, buf) != 0) {
         return -1;
     }
 
-    int res = sscanf(buf, "SOY %20s", nombre);
+    int res = sscanf(buf, "EQUIPO %20s", nombre);
 
     if (res == EOF || res != 1) {
-        cerr << "ERROR: no se pudo leer el nombre del cliente" << endl;
+        cerr << "ERROR: no se pudo leer el nombre del equipo" << endl;
         return -1;
     }
 
     return 0;
 }
 
-// informa el tipo de comando recibido (LETRA, PALABRA, UPDATE o si es inválido) y deja el mensaje en mensaje por si necesita seguir parseando
+
+// informa el tipo de comando recibido (o si es inválido)
+// deja el mensaje en mensaje por si necesita seguir parseando
 int recibir_comando(int socket_fd, char* mensaje) {
     if (recibir(socket_fd, mensaje) != 0) {
         return -1;
@@ -236,13 +340,21 @@ int recibir_comando(int socket_fd, char* mensaje) {
     char comando[MENSAJE_MAXIMO];
     sscanf(mensaje, "%s", comando);
 
-    if (strcmp(comando, "LETRA") == 0) {
-        // el mensaje es LETRA
-        return MSG_LETRA;
+    if (strcmp(comando, "PARTE_BARCO") == 0) {
+        // el mensaje es PARTE_BARCO
+        return MSG_PARTE_BARCO;
     }
-    else if (strcmp(comando, "PALABRA") == 0) {
-        // el mensaje es PALABRA
-        return MSG_PALABRA;
+    else if (strcmp(comando, "BARCO_TERMINADO") == 0) {
+        // el mensaje es BARCO_TERMINADO
+        return MSG_BARCO_TERMINADO;
+    }
+    else if (strcmp(comando, "LISTO") == 0) {
+        // el mensaje es LISTO
+        return MSG_LISTO;
+    }
+    else if (strcmp(comando, "BOMBA") == 0) {
+        // el mensaje es BOMBA
+        return MSG_BOMBA;
     }
     else if (strcmp(comando, "UPDATE") == 0) {
         // el mensaje es UPDATE
@@ -254,19 +366,36 @@ int recibir_comando(int socket_fd, char* mensaje) {
     }
 }
 
-int parsear_casillero(char* mensaje, Casillero& ficha) {
-    int letra = sscanf(mensaje, "LETRA %d %d %c", &ficha.fila, &ficha.columna, &ficha.letra);
 
-    if (letra == 3) {
-        // el mensaje es LETRA y ficha contiene la ficha que desea colocar
+int parsear_bomba(char* mensaje, Casillero& ficha) {
+
+    int cant = sscanf(mensaje, "BOMBA %d %d", &ficha.fila, &ficha.columna);
+    ficha.contenido = BOMBA;
+
+    if (cant == 2) {
+        //El mensaje BARCO es válido
         return 0;
     }
     else {
-        cerr << "ERROR: " << mensaje << " no está bien formado. Debe ser LETRA <fila> <columna> <letra>" << endl;
+        cerr << "ERROR: " << mensaje << " no está bien formado. Debe ser BOMBA <fila> <columna>" << endl;
         return -1;
     }
 }
 
+int parsear_barco(char* mensaje, Casillero& ficha) {
+
+    int cant = sscanf(mensaje, "PARTE_BARCO %d %d", &ficha.fila, &ficha.columna);
+    ficha.contenido = BARCO;
+
+    if (cant == 2) {
+        //El mensaje PARTE_BARCO es válido
+        return 0;
+    }
+    else {
+        cerr << "ERROR: " << mensaje << " no está bien formado. Debe ser PARTE_BARCO <fila> <columna>" << endl;
+        return -1;
+    }
+}
 
 
 // mensajes enviados por el server
@@ -277,18 +406,45 @@ int enviar_dimensiones(int socket_fd) {
     return enviar(socket_fd, buf);
 }
 
+
 int enviar_tablero(int socket_fd) {
     char buf[MENSAJE_MAXIMO+1];
-    sprintf(buf, "STATUS ");
-    int pos = 7;
+    int pos;
+    vector<vector<char> > *tablero;
+
+
+    //Si no estoy peleando, muestro los barcos de mi equipo
+    if(!peleando){
+        sprintf(buf, "BARCOS ");
+        tablero = &tablero_equipo1;
+        pos = 7;
+    }else{
+    //Sino muestro los resultados de la batalla
+        sprintf(buf, "BATALLA ");
+        tablero = &tablero_equipo2;
+        pos = 8;
+    }
+
     for (unsigned int fila = 0; fila < alto; ++fila) {
         for (unsigned int col = 0; col < ancho; ++col) {
-            char letra = tablero_palabras[fila][col];
-            buf[pos] = (letra == VACIO)? '-' : letra;
+            char contenido = (*tablero)[fila][col];
+            switch(contenido){
+                case VACIO:
+                   buf[pos] = '-';
+                   break; //optional
+                case BARCO:
+                   //si estoy peleando, oculto los barcos. Sino, los muestro
+                   buf[pos] = peleando ? '-' : 'B';
+                   break; //optional
+                case BOMBA:
+                    buf[pos] = '*';
+            }
+
             pos++;
         }
     }
     buf[pos] = 0; //end of buffer
+    cout << endl;
 
     return enviar(socket_fd, buf);
 }
@@ -296,6 +452,18 @@ int enviar_tablero(int socket_fd) {
 int enviar_ok(int socket_fd) {
     char buf[MENSAJE_MAXIMO+1];
     sprintf(buf, "OK");
+    return enviar(socket_fd, buf);
+}
+
+int enviar_golpe(int socket_fd) {
+    char buf[MENSAJE_MAXIMO+1];
+    sprintf(buf, "GOLPE");
+    return enviar(socket_fd, buf);
+}
+
+int enviar_estaba_golpeado(int socket_fd) {
+    char buf[MENSAJE_MAXIMO+1];
+    sprintf(buf, "ESTABA_GOLPEADO");
     return enviar(socket_fd, buf);
 }
 
@@ -315,51 +483,52 @@ void cerrar_servidor(int signal) {
     exit(EXIT_SUCCESS);
 }
 
-void terminar_servidor_de_jugador(int socket_fd, list<Casillero>& palabra_actual) {
+void terminar_servidor_de_jugador(int socket_fd, list<Casillero>& barco_actual, vector<vector<char> >& tablero_cliente) {
+
     cout << "Se interrumpió la comunicación con un cliente" << endl;
 
     close(socket_fd);
 
-    quitar_letras(palabra_actual);
+    quitar_partes_barco(barco_actual, tablero_cliente);
 
     exit(-1);
 }
 
 
-void quitar_letras(list<Casillero>& palabra_actual) {
-    for (list<Casillero>::const_iterator casillero = palabra_actual.begin(); casillero != palabra_actual.end(); casillero++) {
-        rwlocks_tablero_letras[casillero->fila][casillero->columna].wlock();
-        tablero_letras[casillero->fila][casillero->columna] = VACIO;
-        rwlocks_tablero_letras[casillero->fila][casillero->columna].wunlock();
+void quitar_partes_barco(list<Casillero>& barco_actual) {
+    for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
+        rwlocks_tablero_equipo1[casillero->fila][casillero->columna].wlock();
+        tablero_equipo1[casillero->fila][casillero->columna] = VACIO;
+        rwlocks_tablero_equipo1[casillero->fila][casillero->columna].wunlock();
     }
-    palabra_actual.clear();
+    barco_actual.clear();
 }
 
 
-bool es_ficha_valida_en_palabra(const Casillero& ficha, const list<Casillero>& palabra_actual) {
+bool es_ficha_valida(const Casillero& ficha, const list<Casillero>& barco_actual, const vector<vector<char> >& tablero){
     // si está fuera del tablero, no es válida
     if (ficha.fila < 0 || ficha.fila > alto - 1 || ficha.columna < 0 || ficha.columna > ancho - 1) {
         return false;
     }
 
-    rwlocks_tablero_letras[ficha.fila][ficha.columna].rlock();
+    rwlocks_tablero_equipo1[ficha.fila][ficha.columna].rlock();
 
     // si el casillero está ocupado, tampoco es válida
-    if (tablero_letras[ficha.fila][ficha.columna] != VACIO) {
-        rwlocks_tablero_letras[ficha.fila][ficha.columna].runlock();
+    if (tablero_equipo1[ficha.fila][ficha.columna] != VACIO) {
+        rwlocks_tablero_equipo1[ficha.fila][ficha.columna].runlock();
         return false;
     }
-    rwlocks_tablero_letras[ficha.fila][ficha.columna].runlock();
+    rwlocks_tablero_equipo1[ficha.fila][ficha.columna].runlock();
 
-    if (palabra_actual.size() > 0) {
+    if (barco_actual.size() > 0) {
         // no es la primera letra de la palabra, ya hay fichas colocadas para esta palabra
-        Casillero mas_distante = casillero_mas_distante_de(ficha, palabra_actual);
+        Casillero mas_distante = casillero_mas_distante_de(ficha, barco_actual);
         int distancia_vertical = ficha.fila - mas_distante.fila;
         int distancia_horizontal = ficha.columna - mas_distante.columna;
 
         if (distancia_vertical == 0) {
             // la palabra es horizontal
-            for (list<Casillero>::const_iterator casillero = palabra_actual.begin(); casillero != palabra_actual.end(); casillero++) {
+            for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
                 if (ficha.fila - casillero->fila != 0) {
                     // no están alineadas horizontalmente
                     return false;
@@ -368,22 +537,22 @@ bool es_ficha_valida_en_palabra(const Casillero& ficha, const list<Casillero>& p
 
             int paso = distancia_horizontal / abs(distancia_horizontal);
 
-            rwlock_tablero_palabras.rlock();
+            rwlock_tablero_equipo_2.rlock();
             for (unsigned int columna = mas_distante.columna; columna != ficha.columna; columna += paso) {
                 // el casillero DEBE estar ocupado en el tablero de palabras
-                rwlocks_tablero_palabras[ficha.fila][columna].rlock();
-                if (!(puso_letra_en(ficha.fila, columna, palabra_actual)) && tablero_palabras[ficha.fila][columna] == VACIO) {
-                    rwlocks_tablero_palabras[ficha.fila][columna].runlock();
-                    rwlock_tablero_palabras.runlock();
+                rwlocks_tablero_equipo_2[ficha.fila][columna].rlock();
+                if (!(puso_letra_en(ficha.fila, columna, barco_actual)) && tablero_equipo_2[ficha.fila][columna] == VACIO) {
+                    rwlocks_tablero_equipo_2[ficha.fila][columna].runlock();
+                    rwlock_tablero_equipo_2.runlock();
                     return false;
                 }
-                rwlocks_tablero_palabras[ficha.fila][columna].runlock();
+                rwlocks_tablero_equipo_2[ficha.fila][columna].runlock();
             }
-            rwlock_tablero_palabras.runlock();
+            rwlock_tablero_equipo_2.runlock();
 
         } else if (distancia_horizontal == 0) {
             // la palabra es vertical
-            for (list<Casillero>::const_iterator casillero = palabra_actual.begin(); casillero != palabra_actual.end(); casillero++) {
+            for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
                 if (ficha.columna - casillero->columna != 0) {
                     // no están alineadas verticalmente
                     return false;
@@ -391,18 +560,18 @@ bool es_ficha_valida_en_palabra(const Casillero& ficha, const list<Casillero>& p
             }
 
             int paso = distancia_vertical / abs(distancia_vertical);
-            rwlock_tablero_palabras.rlock();
+            rwlock_tablero_equipo_2.rlock();
             for (unsigned int fila = mas_distante.fila; fila != ficha.fila; fila += paso) {
                 // el casillero DEBE estar ocupado en el tablero de palabras
-                rwlocks_tablero_palabras[fila][ficha.columna].rlock();
-                if (!(puso_letra_en(fila, ficha.columna, palabra_actual)) && tablero_palabras[fila][ficha.columna] == VACIO) {
-                    rwlocks_tablero_palabras[fila][ficha.columna].runlock();
-                    rwlock_tablero_palabras.runlock();
+                rwlocks_tablero_equipo_2[fila][ficha.columna].rlock();
+                if (!(puso_letra_en(fila, ficha.columna, barco_actual)) && tablero_equipo_2[fila][ficha.columna] == VACIO) {
+                    rwlocks_tablero_equipo_2[fila][ficha.columna].runlock();
+                    rwlock_tablero_equipo_2.runlock();
                     return false;
                 }
-                rwlocks_tablero_palabras[fila][ficha.columna].runlock();
+                rwlocks_tablero_equipo_2[fila][ficha.columna].runlock();
             }
-            rwlock_tablero_palabras.runlock();
+            rwlock_tablero_equipo_2.runlock();
         }
         else {
             // no están alineadas ni horizontal ni verticalmente
@@ -414,10 +583,10 @@ bool es_ficha_valida_en_palabra(const Casillero& ficha, const list<Casillero>& p
 }
 
 
-Casillero casillero_mas_distante_de(const Casillero& ficha, const list<Casillero>& palabra_actual) {
+Casillero casillero_mas_distante_de(const Casillero& ficha, const list<Casillero>& barco_actual) {
     const Casillero* mas_distante;
     int max_distancia = -1;
-    for (list<Casillero>::const_iterator casillero = palabra_actual.begin(); casillero != palabra_actual.end(); casillero++) {
+    for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
         int distancia = max<unsigned int>(abs((int)(casillero->fila - ficha.fila)), abs((int)(casillero->columna - ficha.columna)));
         if (distancia > max_distancia) {
             max_distancia = distancia;
@@ -428,13 +597,13 @@ Casillero casillero_mas_distante_de(const Casillero& ficha, const list<Casillero
     return *mas_distante;
 }
 
-
-bool puso_letra_en(unsigned int fila, unsigned int columna, const list<Casillero>& letras) {
-    for (list<Casillero>::const_iterator casillero = letras.begin(); casillero != letras.end(); casillero++) {
+bool puso_barco_en(unsigned int fila, unsigned int columna, const list<Casillero>& barco_actual) {
+    for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
         if (casillero->fila == fila && casillero->columna == columna)
             return true;
     }
     // si no encontró
     return false;
 }
+
 
