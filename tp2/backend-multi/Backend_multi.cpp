@@ -16,6 +16,7 @@ unsigned int ancho = -1;
 unsigned int alto = -1;
 vector<vector<RWLock> > rwlocks_tablero_equipo1;
 vector<vector<RWLock> > rwlocks_tablero_equipo2;
+
 RWLock rwlock_tablero_equipo2;
 
 
@@ -142,10 +143,14 @@ void *atendedor_de_jugador(void *socket_param) {
     //Veo que tablero usar dependiendo el equipo que soy
     if(!soy_equipo_1){
         tablero_jugador = &tablero_equipo2;
+        rwlocks_tablero = &rwlocks_tablero_equipo2;
         tablero_rival = &tablero_equipo1;
+        rwlocks_tablero_rival = &rwlocks_tablero_equipo1;
     }else{
         tablero_jugador = &tablero_equipo1;
+        rwlocks_tablero = &rwlocks_tablero_equipo1;
         tablero_rival = &tablero_equipo2;
+        rwlocks_tablero_rival = &rwlocks_tablero_equipo2;
     }
 
     while (true) {
@@ -176,7 +181,11 @@ void *atendedor_de_jugador(void *socket_param) {
             // verificar si es una posición válida del tablero
             if (es_ficha_valida(ficha, barco_actual, *tablero_jugador)) {
                 barco_actual.push_back(ficha);
-                (*tablero_jugador)[ficha.fila][ficha.columna] = ficha.contenido;
+
+                rwlocks_tablero_equipo1[ficha.fila][ficha.columna].wlock();
+                tablero_equipo1[ficha.fila][ficha.columna] = ficha.contenido;
+                rwlocks_tablero_equipo1[ficha.fila][ficha.columna].wunlock();
+
                 // OK
                 if (enviar_ok(socket_fd) != 0) {
                     // se produjo un error al enviar. Cerramos todo.
@@ -225,12 +234,19 @@ void *atendedor_de_jugador(void *socket_param) {
                 continue;
             }
 
+            
+
+            //bloqueo mi tablero entero
+
             // las partes acumuladas conforman un barco completo, escribirlas en el tablero del jugador y borrar las partes temporales
             for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
-                (*tablero_jugador)[casillero->fila][casillero->columna] = casillero->contenido;
+                rwlocks_tablero[casillero->fila][casillero->columna].wlock();
+                tablero_jugador[casillero->fila][casillero->columna] = casillero->contenido;
+                rwlocks_tablero[casillero->fila][casillero->columna].wunlock();
             }
-
             barco_actual.clear();
+            
+            
 
             if (enviar_ok(socket_fd) != 0) {
                 // se produjo un error al enviar. Cerramos todo.
