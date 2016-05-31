@@ -21,14 +21,19 @@
 #define MENSAJE_MAXIMO 1024
 #define DATO_MAXIMO 100
 
-#define VACIO 0x20
+#define VACIO 0x2D
+#define BARCO 0x42
+#define BOMBA 0x2A
 
-#define MSG_LETRA 1
-#define MSG_PALABRA 2
-#define MSG_UPDATE 3
+#define MSG_EQUIPO 10
+#define MSG_PARTE_BARCO 20
+#define MSG_BARCO_TERMINADO 30
+#define MSG_BOMBA 40
+#define MSG_UPDATE 50
+#define MSG_LISTO 60
 #define MSG_INVALID 99
 
-#define NUM_THREADS 10
+#define NUM_THREADS 100
 
 int recibir(int s, char* buf);
 int enviar(int s, char* buf);
