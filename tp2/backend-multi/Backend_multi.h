@@ -45,4 +45,6 @@ Casillero casillero_mas_distante_de(const Casillero& ficha, const list<Casillero
 bool puso_barco_en(unsigned int fila, unsigned int columna, const list<Casillero>& barco_actual);
 
 
+int registrar_equipo (char* nombre );
+
 #endif

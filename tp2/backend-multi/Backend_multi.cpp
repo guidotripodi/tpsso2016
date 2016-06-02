@@ -17,9 +17,32 @@ unsigned int alto = -1;
 vector<vector<RWLock> > rwlocks_tablero_equipo1;
 vector<vector<RWLock> > rwlocks_tablero_equipo2;
 
+
+
+
+char equipos[2][21];
+bool equiposeleccionado[2];
+
 RWLock rwlock_tablero_equipo2;
 
-
+int registrar_equipo (char* nombre ){
+	int res;
+	if(equiposeleccionado[0]){
+		res = strcmp(nombre, equipos[0]);
+		if (res == 0) return 0;
+	}else{
+		strcpy(equipos[0],nombre);
+		return 0;
+	}
+	if(equiposeleccionado[1]){
+		res = strcmp(nombre, equipos[1]);
+		if (res == 0) return 0;
+	}else{
+		strcpy(equipos[1],nombre);
+		return 0;
+	}
+	return 1;
+}
 
 bool cargar_int(const char* numero, unsigned int& n) {
     char *eptr;
@@ -68,6 +91,9 @@ int main(int argc, const char* argv[]) {
         rwlocks_tablero_equipo2[i] = vector<RWLock>(ancho);
     }
 
+	equiposeleccionado[0] = false;
+	equiposeleccionado[1] = false;
+	
     int socketfd_cliente, socket_size;
     struct sockaddr_in local, remoto;
 
@@ -119,6 +145,7 @@ void *atendedor_de_jugador(void *socket_param) {
     char nombre_equipo[21];
     int socket_fd = *((int *) socket_param);
 
+	bool soy_equipo_1 = true;
      // lista de casilleros que ocupa el barco actual (aún no confirmado)
     list<Casillero> barco_actual;
 
@@ -126,31 +153,41 @@ void *atendedor_de_jugador(void *socket_param) {
         // el cliente cortó la comunicación, o hubo un error. Cerramos todo.
         terminar_servidor_de_jugador(socket_fd, barco_actual, tablero_equipo1);
     }
+	
+	if(registrar_equipo(nombre_equipo) != 0){
+		// el nombre del equipo es invalido
+		terminar_servidor_de_jugador(socket_fd, barco_actual, tablero_equipo1);
+	}
+	
+	soy_equipo_1 = strcmp(equipos[0], nombre_equipo) == 0;
 
     if (enviar_dimensiones(socket_fd) != 0) {
         // se produjo un error al enviar. Cerramos todo.
         terminar_servidor_de_jugador(socket_fd, barco_actual, tablero_equipo1);
     }
-
+	
+	
+	
     cout << "Esperando que juegue " << nombre_equipo << endl;
 
     //Hay un solo equipo, soy siempre el equipo1
-    bool soy_equipo_1 = true;
+    
 
     vector<vector<char> > *tablero_jugador;
     vector<vector<char> > *tablero_rival;
+    vector<vector<RWLock> > *rwlocks_tablero;
 
     //Veo que tablero usar dependiendo el equipo que soy
     if(!soy_equipo_1){
         tablero_jugador = &tablero_equipo2;
         rwlocks_tablero = &rwlocks_tablero_equipo2;
         tablero_rival = &tablero_equipo1;
-        rwlocks_tablero_rival = &rwlocks_tablero_equipo1;
+        //rwlocks_tablero_rival = &rwlocks_tablero_equipo1;
     }else{
         tablero_jugador = &tablero_equipo1;
         rwlocks_tablero = &rwlocks_tablero_equipo1;
         tablero_rival = &tablero_equipo2;
-        rwlocks_tablero_rival = &rwlocks_tablero_equipo2;
+        //rwlocks_tablero_rival = &rwlocks_tablero_equipo2;
     }
 
     while (true) {
