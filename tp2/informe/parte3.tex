@@ -1,0 +1,62 @@
+
+\subsection{Ejercicios}
+\begin{itemize}
+ \item 
+\textbf{Ejercicio 3}
+En segundo lugar, deberán implementar el servidor de backend multithreaded inspirándose en el código provisto y lo desarrollado en el punto anterior.
+\end{itemize}
+
+\subsection{Resultados y Conclusiones}
+
+
+\subsubsection[Resolución Ejercicio 3]{Ejercicio 3}
+
+\indent En este Ejercicio, se solicit\'{o} la implementación de un backend mutithreaded, para el desarrollo del mismo,
+utilizamos la base del backend mono para la conexi\'{o}n con el servidor, el parseo de las fichas, tanto para la validez de las mismas
+y tambi\'{e}n el env\'{\i}o de dimensiones del tablero de juego.\\
+
+Utilizamos la función $atendedor\_de\_jugador$ la cual la convertimos en un thread para cada jugador. Esta función es llamada desde
+la función main cuando las conexiones del socket entre el cliente-servidor son correctas. \\
+Convertimos la función enunciada de la siguiente manera:\\
+\begin{verbatim}
+ pthread_create(&threads[i], NULL, &atendedor_de_jugador, &socketfd_cliente);
+\end{verbatim}
+
+En donde, threads es un arreglo de thread$\_$t y se le asigna uno a cada jugador y socketfd$\_$cliente es el atributo 
+de cada thread. En este ejercicio como no vamos a necesitar el atributo todos los threads usan el mismo.
+
+A continuación, mostraremos esta sección de código:\\
+\begin{verbatim}
+\*creacion de arreglo de threads *\
+
+                      pthread_t threads[NUM_THREADS];
+                      
+\end{verbatim}
+
+Luego, en la función $atendedor\_de\_jugador$ la cual recibe un thread$\_$data lo guardamos en un puntero a thread$\_$data llamado
+my$\_$data y creamos un entero llamado socket$\_$fd el socket que nos viene como parametro.\\
+
+Luego, basandonos en el backend mono, realizamos una implementación similar con la particularidad que, en el if donde se
+consulta si el mensaje del jugador es una ficha, palabra o update.\\
+En caso de ser una ficha, luego de parsear el casillero, antes de chequear la validez de la ficha utilizamos nuestro read\_write\_lock y realizamos
+la funcion $rlock()$. En caso de ser una ficha valida, realizamos un read unlock y procedemos a escribir de la siguiente manera:\\
+\begin{verbatim}
+                    rwlocks_tablero_letras[ficha.fila][ficha.columna].wlock();
+		    tablero_letras[ficha.fila][ficha.columna] = ficha.letra;
+		    rwlocks_tablero_letras[ficha.fila][ficha.columna].wunlock();
+                     
+                     
+\end{verbatim}
+Para luego enviar la misma y terminar la jugada. En caso de que la validez de la ficha no sea correcta, dejamos de leer
+y procedemos a escribir para quitar fichas y asi dejar de escribir.
+
+Por consiguiente, en caso de que el mensaje sea una palabra se realiza un wlock para escribir la palabra y luego un wunlock.\\
+Finalmente, en caso de ser update se realiza un rlock para actualizar la pantalla y se finaliza la jugada.\\
+
+De esta manera, queda implementado nuestro backend multithreaded como fue solicitado.
+
+
+
+
+
+
