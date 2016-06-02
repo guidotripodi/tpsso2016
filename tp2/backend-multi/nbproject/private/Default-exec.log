@@ -1,0 +1,22 @@
+called: g++
+	/home/panda/Facultad/SO/2016/tpsso2016/tp2/backend-multi
+	g++
+	-g
+	-Wall
+	-Werror
+	-c
+	Enviar_recibir.cpp
+
+called: g++
+	/home/panda/Facultad/SO/2016/tpsso2016/tp2/backend-multi
+	g++
+	-pthread
+	-g
+	-Wall
+	-Werror
+	RWLock.cpp
+	Backend_multi.cpp
+	Enviar_recibir.o
+	-o
+	backend
+

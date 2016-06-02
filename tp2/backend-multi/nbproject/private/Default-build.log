@@ -1,0 +1,22 @@
+g++ -g -Wall -Werror -c Enviar_recibir.cpp
+g++ -pthread -g -Wall -Werror RWLock.cpp Backend_multi.cpp Enviar_recibir.o -o backend
+Backend_multi.cpp: In function ‘void* atendedor_de_jugador(void*)’:
+Backend_multi.cpp:280:70: error: ‘class std::vector<RWLock>’ has no member named ‘wlock’
+                 rwlocks_tablero[casillero->fila][casillero->columna].wlock();
+                                                                      ^
+Backend_multi.cpp:281:70: error: no match for ‘operator=’ (operand types are ‘std::vector<char>’ and ‘const char’)
+                 tablero_jugador[casillero->fila][casillero->columna] = casillero->contenido;
+                                                                      ^
+Backend_multi.cpp:281:70: note: candidate is:
+In file included from /usr/include/c++/4.8/vector:69:0,
+                 from Encabezado.h:15,
+                 from Backend_multi.h:5,
+                 from Backend_multi.cpp:1:
+/usr/include/c++/4.8/bits/vector.tcc:160:5: note: std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(const std::vector<_Tp, _Alloc>&) [with _Tp = char; _Alloc = std::allocator<char>]
+     vector<_Tp, _Alloc>::
+     ^
+/usr/include/c++/4.8/bits/vector.tcc:160:5: note:   no known conversion for argument 1 from ‘const char’ to ‘const std::vector<char>&’
+Backend_multi.cpp:282:70: error: ‘class std::vector<RWLock>’ has no member named ‘wunlock’
+                 rwlocks_tablero[casillero->fila][casillero->columna].wunlock();
+                                                                      ^
+make: *** [backend] Error 1
