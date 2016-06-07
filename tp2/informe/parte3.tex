@@ -37,21 +37,32 @@ Luego, en la función $atendedor\_de\_jugador$ la cual recibe un thread$\_$data 
 my$\_$data y creamos un entero llamado socket$\_$fd el socket que nos viene como parametro.\\
 
 Luego, basandonos en el backend mono, realizamos una implementación similar con la particularidad que, en el if donde se
-consulta si el mensaje del jugador es una ficha, palabra o update.\\
-En caso de ser una ficha, luego de parsear el casillero, antes de chequear la validez de la ficha utilizamos nuestro read\_write\_lock y realizamos
-la funcion $rlock()$. En caso de ser una ficha valida, realizamos un read unlock y procedemos a escribir de la siguiente manera:\\
+consulta si el mensaje del jugador es una parte del barco, el barco terminado, una bomba o update.\\
+En caso de ser una parte de barco, luego de parsear el casillero, y al chequear la validez de la ficha utilizamos nuestro read\_write\_lock y realizamos
+la funcion $wlock()$. En caso de ser una ficha valida, realizamos un write lock y procedemos a escribir de la siguiente manera:\\
 \begin{verbatim}
-                    rwlocks_tablero_letras[ficha.fila][ficha.columna].wlock();
-		    tablero_letras[ficha.fila][ficha.columna] = ficha.letra;
-		    rwlocks_tablero_letras[ficha.fila][ficha.columna].wunlock();
+				(*rwlocks_tablero)[ficha.fila][ficha.columna].wlock();
+				(*tablero_jugador)[ficha.fila][ficha.columna] = ficha.contenido;
+				(*rwlocks_tablero)[ficha.fila][ficha.columna].wunlock();
                      
                      
 \end{verbatim}
 Para luego enviar la misma y terminar la jugada. En caso de que la validez de la ficha no sea correcta, dejamos de leer
 y procedemos a escribir para quitar fichas y asi dejar de escribir.
 
-Por consiguiente, en caso de que el mensaje sea una palabra se realiza un wlock para escribir la palabra y luego un wunlock.\\
-Finalmente, en caso de ser update se realiza un rlock para actualizar la pantalla y se finaliza la jugada.\\
+Por consiguiente, en caso de que el mensaje sea una barco terminado se realiza un wlock para escribir la palabra y luego un wunlock.\\
+
+El mismo se detalla a continuación:\\
+\begin{verbatim}
+			for (list<Casillero>::const_iterator casillero = barco_actual.begin(); casillero != barco_actual.end(); casillero++) {
+				(*rwlocks_tablero)[casillero->fila][casillero->columna].wlock();
+				(*tablero_jugador)[casillero->fila][casillero->columna] = casillero->contenido;
+				(*rwlocks_tablero)[casillero->fila][casillero->columna].wunlock();
+			}
+			barco_actual.clear();       
+\end{verbatim}
+
+Luego, en caso de ser una bomba chequeamos si el casillero donde se coloco la bomba tiene un barco o una bomba, en caso de tener una bomba se envia el mensaje de que ya estaba golpeado como en el backend mono. Si había un barco, hacemos un wlock para escribir en el casillero bomba y liberamos el lock.\\
 
 De esta manera, queda implementado nuestro backend multithreaded como fue solicitado.
 
