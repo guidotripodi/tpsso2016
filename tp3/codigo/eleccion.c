@@ -38,9 +38,55 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
          HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
          HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
 
+LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
+
           */
+	
+		MPI_Irecv(&buffer, 1, MPI_ARRAY, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+		origen = status.MPI_SOURCE;
+		//envio una señal de ACK al que me envio el mjs para avisar que lo recibi
+
+		MPI_Isend(NULL, 0, MPI_INT, origen, TAG_OTORGADO, COMM_WORLD);
+		// esto no se si esta bien
+		
+
+		if (buffer[0] == pid){
+			//hay lider
+			if (buffer[1] == pid) {
+				//soy lider cambio status no se cual 
+			}if (buffer[1] > pid){
+				//el lider esta mas adelante
+				//mando msj con cl cl
+				buffer[0] = buffer[1];
+				buffer[1] = buffer[1];
+				MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+				while(!llego){ //aca tengo q esperar t segundos q no se como poner eso 
+					MPI_Irecv(&ck, 1, MPI_ARRAY, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+					//aca tengo q ver si recibi o no msj si no recibi mando al siguiente
+					proximo = proximo++;
+					MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+				}
+			}
+		}else{
+			//todavia no termino
+			if (buffer[1] < pid){
+				//sigue con un nuevo cl
+				buffer[0] = pid;
+				buffer[1] = pid;
+				MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+				while(!llego){ //aca tengo q esperar t segundos q no se como poner eso 
+					MPI_Irecv(&ck, 1, MPI_ARRAY, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+					//aca tengo q ver si recibi o no msj si no recibi mando al siguiente
+					proximo = proximo++;
+					MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+				}
+			}
+
+		}
+
 
 	 /* Actualizo valor de la hora. */
+
 	 ahora= MPI_Wtime();
 	}
 
