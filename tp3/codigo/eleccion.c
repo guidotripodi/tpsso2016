@@ -21,6 +21,12 @@ void iniciar_eleccion(t_pid pid, int es_ultimo)
   HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
   HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
   */
+	  char * mensaje[2];
+	  mensaje[0]= pid;
+	  mensaje[1] = pid;
+	  proximo = siguiente_pid(pid, es_ultimo);
+	  MPI_Isend(mensaje, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD);		
+	  //aca lo q hago es crearme la tupla y mandarla iniciando la eleccion
 }
 
 void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
@@ -42,7 +48,7 @@ LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
 
           */
 	
-		MPI_Irecv(&buffer, 1, MPI_ARRAY, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+		MPI_Irecv(&buffer, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
 		origen = status.MPI_SOURCE;
 		//envio una señal de ACK al que me envio el mjs para avisar que lo recibi
 
@@ -54,16 +60,17 @@ LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
 			//hay lider
 			if (buffer[1] == pid) {
 				//soy lider cambio status no se cual 
+				status = LIDER;
 			}if (buffer[1] > pid){
 				//el lider esta mas adelante
 				//mando msj con cl cl
 				buffer[0] = buffer[1];
 				buffer[1] = buffer[1];
-				MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+				MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
 				while(!llego){ //aca tengo q esperar t segundos q no se como poner eso 
-					MPI_Irecv(&ck, 1, MPI_ARRAY, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+					MPI_Irecv(&ck, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
 					//aca tengo q ver si recibi o no msj si no recibi mando al siguiente
-					proximo = proximo++;
+					proximo = siguiente_pid(proximo,es_ultimo);
 					MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
 				}
 			}
@@ -73,12 +80,12 @@ LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
 				//sigue con un nuevo cl
 				buffer[0] = pid;
 				buffer[1] = pid;
-				MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+				MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
 				while(!llego){ //aca tengo q esperar t segundos q no se como poner eso 
-					MPI_Irecv(&ck, 1, MPI_ARRAY, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+					MPI_Irecv(&ck, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
 					//aca tengo q ver si recibi o no msj si no recibi mando al siguiente
-					proximo = proximo++;
-					MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+					proximo = siguiente_pid(proximo,es_ultimo);
+					MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
 				}
 			}
 
