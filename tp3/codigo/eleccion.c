@@ -48,7 +48,7 @@ LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
 
           */
 	
-		MPI_Irecv(&buffer, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+		MPI_Irecv(&buffer, 2, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &status);
 		origen = status.MPI_SOURCE;
 		//envio una señal de ACK al que me envio el mjs para avisar que lo recibi
 
@@ -68,7 +68,7 @@ LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
 				buffer[1] = buffer[1];
 				MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
 				while(!llego){ //aca tengo q esperar t segundos q no se como poner eso 
-					MPI_Irecv(&ck, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
+					MPI_Irecv(&ck, 2, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &status);
 					//aca tengo q ver si recibi o no msj si no recibi mando al siguiente
 					proximo = siguiente_pid(proximo,es_ultimo);
 					MPI_Isend(buffer, 1, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
@@ -81,12 +81,20 @@ LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
 				buffer[0] = pid;
 				buffer[1] = pid;
 				MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
-				while(!llego){ //aca tengo q esperar t segundos q no se como poner eso 
-					MPI_Irecv(&ck, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &status);
-					//aca tengo q ver si recibi o no msj si no recibi mando al siguiente
-					proximo = siguiente_pid(proximo,es_ultimo);
-					MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+				
+				while(!flag){ //aca tengo q esperar t segundos q no se como poner eso 
+
+					MPI_Iprobe( 0, 0, MPI_COMM_WORLD, &flag, &status);
+					if (flag == true){
+						MPI_Irecv(&ck, 2, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &status);
+					}else{
+						proximo = siguiente_pid(proximo,es_ultimo);
+						MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD); 
+					}
+					MPI_Iprobe( 0, 0, MPI_COMM_WORLD, &flag, &status);
+							//aca tengo q ver si recibi o no msj si no recibi mando al siguiente
 				}
+				MPI_Irecv(&ck, 2, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &status);
 			}
 
 		}
