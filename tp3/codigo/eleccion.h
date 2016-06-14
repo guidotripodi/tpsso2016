@@ -1,6 +1,14 @@
 #ifndef	_ELECCION_H
 #define	_ELECCION_H
 
+#define	TAG_OTORGADO 20
+#define	TAG_ACK	30
+#define	TAG_CONTROL	10
+
+#define COMM_WORLD      MPI_COMM_WORLD
+#define ANY_SOURCE      MPI_ANY_SOURCE
+#define ANY_TAG         MPI_ANY_TAG
+
 /* Enumerado para ver si soy o no líder. */
 enum status { NO_LIDER, LIDER };
 typedef enum status t_status;
@@ -15,6 +23,7 @@ typedef unsigned short int t_pid;
  * es_ultimo indica si éste es el último proceso del anillo o no.
  */
 void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout);
+void esperar(int segundos);
 
 /* Función que se encarga de iniciar la elección de líder.
  * Los parámetros tienen la misma semántica que eleccion_lider().
