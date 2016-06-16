@@ -5,7 +5,7 @@
 static t_pid siguiente_pid(t_pid pid, int es_ultimo)
 {
  t_pid res= 0; /* Para silenciar el warning del compilador. */
-
+ printf("para %d - el ultimo es %d\n",pid,es_ultimo);
  if (es_ultimo)
 	res= 1;
  else
@@ -16,8 +16,8 @@ static t_pid siguiente_pid(t_pid pid, int es_ultimo)
 
 void iniciar_eleccion(t_pid pid, int es_ultimo)
 {
- /* Completar acá el algoritmo de inicio de la elección.
-  * Si no está bien documentado, no aprueba.
+ /* Completar acï¿½ el algoritmo de inicio de la elecciï¿½n.
+  * Si no estï¿½ bien documentado, no aprueba.
   HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
   HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
   */
@@ -46,6 +46,8 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
  MPI_Status status_mpi;
  MPI_Request request;
  MPI_Request request1;
+ buffer[0] = buffer[1] = 1;
+ 
  while (ahora<tiempo_maximo)
 	{
 	
@@ -55,45 +57,48 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
 			MPI_Iprobe(ANY_SOURCE, TAG_OTORGADO, MPI_COMM_WORLD, &flag, &status_mpi);
 		}
 		
-		printf("valor flag ?  %d\n", flag);
+//		printf("valor flag ?  %d\n", flag);
 		//if(flag == 0) break;
 		MPI_Irecv(&buffer, 2, MPI_INT, ANY_SOURCE, TAG_OTORGADO, COMM_WORLD, &request);
 		
-		printf("buffer[0] %d\n",buffer[0]);
-		printf("pid %d\n",pid);
+//		printf("buffer[0] %d\n",buffer[0]);
+//		printf("pid %d\n",pid);
 		//ACA HAY Q AVERIGUAR QUIEN ES EL ORIGEN COMO FUNCIONA REQUEST 
 		origen = buffer[0];
-		printf("origen: %d \n",origen );
-		//envio una señal de ACK al que me envio el mjs para avisar que lo recibi
-
+//		printf("origen: %d \n",origen );
+		//envio una seï¿½al de ACK al que me envio el mjs para avisar que lo recibi
+		printf("ack: %d -> %d \n",pid,origen);
 		MPI_Isend(NULL, 0, MPI_INT, origen, TAG_ACK, COMM_WORLD, &request1);
 		// esto no se si esta bien
 		
 
 		if (buffer[0] == pid){
-			printf("entro aca? quien: %d\n", pid );
+//			printf("soy el origen!! %d\n", pid );
 			//hay lider
 			if (buffer[1] == pid) {
 				//soy lider cambio status no se cual 
+				
 				status = LIDER;
 			}
 			if (buffer[1] > pid){
 				//el lider esta mas adelante
 				//mando msj con cl cl
+				
 				buffer[0] = buffer[1];
 				buffer[1] = buffer[1];
 				flag = 0;
 
 				
 				while(flag == 0){ //aca tengo q esperar t segundos q no se como poner eso 
-					
+					printf("el lider es otro: %d -> %d \n",pid,proximo);
 					MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request); 
 					esperar(1);
 					MPI_Iprobe(proximo, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
 					if (flag == 1){
 						MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
 					}else{
-						proximo = siguiente_pid(proximo,es_ultimo); 
+						proximo = siguiente_pid(proximo,es_ultimo);
+						if(es_ultimo) es_ultimo = 0;
 					}
 					
 				}
@@ -108,7 +113,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
 			}	
 			flag = 0;
 			while(flag == 0){ //aca tengo q esperar t segundos q no se como poner eso 
-
+					printf("token ajeno: %d -> %d \n",pid,proximo);
 					MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request); 
 					esperar(1);
 					MPI_Iprobe(proximo, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
@@ -116,6 +121,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
 						MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
 					}else{
 						proximo = siguiente_pid(proximo,es_ultimo); 
+						if(es_ultimo) es_ultimo = 0;
 					}
 					
 			}
@@ -131,7 +137,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
 	}
 
  /* Reporto mi status al final de la ronda. */
- printf("Proceso %u %s líder.\n", pid, (status==LIDER ? "es" : "no es"));
+ printf("Proceso %u %s lï¿½der.\n", pid, (status==LIDER ? "es" : "no es"));
 }
 
 
@@ -156,8 +162,8 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout)
 		}
 		}
 */		
-	 /* Completar acá el algoritmo de elección de líder.
-	  * Si no está bien documentado, no aprueba.
+	 /* Completar acï¿½ el algoritmo de elecciï¿½n de lï¿½der.
+	  * Si no estï¿½ bien documentado, no aprueba.
          HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
          HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
          HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!

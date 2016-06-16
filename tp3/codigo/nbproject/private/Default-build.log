@@ -1,0 +1,6 @@
+gcc -Wall -g -I /usr/include/mpi   -c -o eleccion.o eleccion.c
+eleccion.c:2:17: fatal error: mpi.h: No existe el archivo o el directorio
+ #include "mpi.h"
+                 ^
+compilation terminated.
+make: *** [eleccion.o] Error 1
