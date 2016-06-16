@@ -1,0 +1,12 @@
+called: gcc
+	/home/panda/Facultad/SO/2016/tp/tpsso2016/tp3/codigo
+	gcc
+	-Wall
+	-g
+	-I
+	/usr/include/mpi
+	-c
+	-o
+	eleccion.o
+	eleccion.c
+
