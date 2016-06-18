@@ -94,7 +94,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						}
 						if (es_ultimo) {
 							proximo = siguiente_pid(proximo, 0);
-							//es_ultimo = 0;
+							es_ultimo = 0;
 						}
 					}
 
