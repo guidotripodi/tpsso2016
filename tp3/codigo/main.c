@@ -23,13 +23,13 @@ static int ab_procesos(t_pid pid, int *es_ultimo)
  MPI_Recv(&pid_ultimo, 1, MPI_PID, ID_PROC_CONTROL, TAG_CONTROL,
 	MPI_COMM_WORLD, &status);
 
- *es_ultimo= (pid_ultimo);
+ *es_ultimo= (pid_ultimo==pid);
 
  MPI_Recv(&terminar, 1, MPI_INT, ID_PROC_CONTROL, TAG_CONTROL,
 	MPI_COMM_WORLD, &status);
 
- if (pid_ultimo==pid)
-	printf("Proceso con PID %u es ahora el ï¿½ltimo.\n", pid);
+ if (*es_ultimo)
+	printf("Proceso con PID %u es ahora el último.\n", pid);
 
  return terminar;
 }
@@ -41,7 +41,7 @@ void elector(t_pid pid)
  int empezar;
  MPI_Status status;
 
- /* Inicializo generador de nï¿½meros al azar. */
+ /* Inicializo generador de números al azar. */
  srandom(time(NULL)+rank);
 
  /* Espero a recibir el comando para empezar. */
@@ -61,17 +61,17 @@ void elector(t_pid pid)
 		 break;
 		}
 
-	 printf("Comienza la elecciï¿½n de lï¿½der en proceso %u.\n", pid);
-	 /* Etapa 2: corro la elecciï¿½n de lï¿½der. */
+	 printf("Comienza la elección de líder en proceso %u.\n", pid);
+	 /* Etapa 2: corro la elección de líder. */
 	 if ((random() % DENOMINADOR_PROB_INICIO)==0)
 		{
-		 printf("Poniendo a circular una elecciï¿½n en proceso %u.\n",
+		 printf("Poniendo a circular una elección en proceso %u.\n",
 			pid);
 		 iniciar_eleccion(pid, es_ultimo);
 		}
 
 	 eleccion_lider(pid, es_ultimo, PERIODO_ELECCION);
-	 printf("Finalizada la elecciï¿½n de lï¿½der en proceso %u.\n", pid);
+	 printf("Finalizada la elección de líder en proceso %u.\n", pid);
 	}
 }
 
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	}
  else
 	{
-	 /* Soy un elector mï¿½s. */
+	 /* Soy un elector más. */
 	 elector(rank);
 	}
 

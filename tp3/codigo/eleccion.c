@@ -5,7 +5,7 @@
 static t_pid siguiente_pid(t_pid pid, int es_ultimo) {
 	t_pid res = 0; /* Para silenciar el warning del compilador. */
 	printf("para %d - el ultimo es %d\n", pid, es_ultimo);
-	if (pid == es_ultimo)
+	if (es_ultimo)
 		res = 1;
 	else
 		res = pid + 1;
@@ -26,7 +26,6 @@ void iniciar_eleccion(t_pid pid, int es_ultimo) {
 	int proximo = siguiente_pid(pid, es_ultimo);
 	MPI_Isend(mensaje, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
 	//aca lo q hago es crearme la tupla y mandarla iniciando la eleccion
-	printf("arranque y soy: %d\n", pid);
 }
 
 void esperar(int segundos) {
@@ -46,7 +45,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 	MPI_Request request;
 	MPI_Request request1;
 	buffer[0] = buffer[1] = 1;
-	printf("@@ %u\n", timeout);
+
 	while (ahora < tiempo_maximo) {
 
 		flag = 0;
@@ -55,23 +54,15 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			MPI_Iprobe(ANY_SOURCE, TAG_OTORGADO, MPI_COMM_WORLD, &flag, &status_mpi);
 		}
 
-		//		printf("valor flag ?  %d\n", flag);
-		//if(flag == 0) break;
 		MPI_Irecv(&buffer, 2, MPI_INT, ANY_SOURCE, TAG_OTORGADO, COMM_WORLD, &request);
-
-		//		printf("buffer[0] %d\n",buffer[0]);
-		//		printf("pid %d\n",pid);
-		//ACA HAY Q AVERIGUAR QUIEN ES EL ORIGEN COMO FUNCIONA REQUEST 
 		origen = status_mpi.MPI_SOURCE;
-		//		printf("origen: %d \n",origen );
-		//envio una se�al de ACK al que me envio el mjs para avisar que lo recibi
+
 		printf("ack: %d -> %d \n", pid, origen);
 		MPI_Isend(NULL, 0, MPI_INT, origen, TAG_ACK, COMM_WORLD, &request1);
-		// esto no se si esta bien
+
 
 
 		if (buffer[0] == pid) {
-			//			printf("soy el origen!! %d\n", pid );
 			//hay lider
 			if (buffer[1] == pid) {
 				//soy lider cambio status no se cual 
@@ -95,7 +86,16 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 					if (flag == 1) {
 						MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
 					} else {
-						proximo = siguiente_pid(proximo, es_ultimo);
+						if (proximo + 1 <= buffer[1] && es_ultimo == 0) {
+							proximo = siguiente_pid(proximo, 0);
+						}
+						if (proximo + 1 > buffer[1] && es_ultimo == 0) {
+							break;
+						}
+						if (es_ultimo) {
+							proximo = siguiente_pid(proximo, 0);
+							//es_ultimo = 0;
+						}
 					}
 
 				}
@@ -117,7 +117,16 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 				if (flag == 1) {
 					MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
 				} else {
-					proximo = siguiente_pid(proximo, es_ultimo);
+					if (proximo + 1 <= buffer[1] && es_ultimo == 0) {
+						proximo = siguiente_pid(proximo, 0);
+					}
+					if (proximo + 1 > buffer[1] && es_ultimo == 0) {
+							break;
+						}
+					if (es_ultimo) {
+						proximo = siguiente_pid(proximo, 0);
+						es_ultimo = 0;
+					}
 				}
 
 			}
@@ -137,33 +146,3 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 }
 
 
-/*		mientras(tenga que existir){
-		reciboUnMensaje();
-		si (tokenesmio ){
-			si(token.cl > yo){
-				enviar(token{cl, cl})
-			}sino{
-				yo soy el lider muajajaja
-			}
-		}sino{ //el token no lo cree
-
-			si(cl < yo) {
-				nuevocl = yo; 
-				
-			}sino{
-				nuevocl = cl;
-				
-			}
-			enviar(token{i, nuevocl});
-		}
-		}
- */
-/* Completar ac� el algoritmo de elecci�n de l�der.
- * Si no est� bien documentado, no aprueba.
-	HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
-	HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
-	HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
-
-LA IDEA ACA ES RECIBIR MSJ Y CHEQUEAR SI ID = CL Y SINO SEGUIR MANDANDO EL MSJ
-
- */
