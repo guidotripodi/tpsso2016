@@ -23,7 +23,7 @@ typedef unsigned short int t_pid;
  * es_ultimo indica si éste es el último proceso del anillo o no.
  */
 void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout);
-void esperar(int segundos);
+void esperar(double ahora, double segundos);
 
 /* Función que se encarga de iniciar la elección de líder.
  * Los parámetros tienen la misma semántica que eleccion_lider().
