@@ -28,7 +28,7 @@ void iniciar_eleccion(t_pid pid, int es_ultimo) {
 	//aca lo q hago es crearme la tupla y mandarla iniciando la eleccion
 }
 
-void esperar(double ahora, double segundos) {
+void esperar(double ahora, unsigned int segundos) {
 	double actual = ahora;
 	actual = MPI_Wtime();
 	while (actual < ahora + segundos) {
@@ -40,23 +40,23 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 	static t_status status = NO_LIDER;
 	double ahora = MPI_Wtime();
 	double tiempo_maximo = ahora + timeout;
-	double actual = 0;
-	t_pid proximo = siguiente_pid(pid, es_ultimo);
+	//double actual = 0;
+	t_pid proximo = 0;
+	proximo = siguiente_pid(pid, es_ultimo);
 	int flag, origen;
 	int buffer[2];
-	flag = 0;
-	origen = 0;
 	MPI_Status status_mpi;
 	MPI_Request request;
 	MPI_Request request1;
 	request = 0;
 	request1 = 0;
 	buffer[0] = buffer[1] = 1;
-
+	origen = 0;
 
 	while (ahora < tiempo_maximo) {
-
+		status = NO_LIDER;
 		flag = 0;
+
 		while (flag == 0 && MPI_Wtime() < tiempo_maximo) {
 			MPI_Iprobe(ANY_SOURCE, TAG_OTORGADO, MPI_COMM_WORLD, &flag, &status_mpi);
 		}
@@ -72,9 +72,9 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 		if (buffer[0] == pid) {
 			//hay lider
 			if (buffer[1] == pid) {
-				//soy lider cambio status no se cual 
-
+				//soy lider cambio status y termino mi eleccion 
 				status = LIDER;
+				break;
 			}
 			if (buffer[1] > pid) {
 				//el lider esta mas adelante
@@ -86,19 +86,13 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 
 				while (flag == 0) { //aca tengo q esperar t segundos q no se como poner eso 
-					printf("el lider es otro: %d -> %d \n", pid, proximo);
-					MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
-					//esperar(ahora, 1);
-					/*actual = ahora;
-					while (ahora < actual + 1) {
-						printf("hola\n");
-						printf("valor de ahora%f\n", ahora );
-						ahora = MPI_Wtime();
-					}*/	
+					//printf("el lider es otro: %d -> %d \n", pid, proximo);
+					MPI_Isend(&buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
+					esperar(ahora, 1);
 					MPI_Iprobe(proximo, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
 					if (flag == 1) {
 						MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
-						printf("recibo ack de: %d soy : %d\n", proximo, pid );
+					//	printf("recibo ack de: %d soy : %d\n", proximo, pid );
 					} else {
 						if (proximo + 1 <= buffer[1] && es_ultimo == 0) {
 							proximo = siguiente_pid(proximo, 0);
@@ -126,14 +120,8 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			flag = 0;
 			while (flag == 0) { //aca tengo q esperar t segundos q no se como poner eso 
 				//printf("token ajeno: %d -> %d token: {%d,%d}\n", pid, proximo, buffer[0], buffer[1]);
-				MPI_Isend(buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
-				//esperar(ahora, 1);
-				/*actual = ahora;
-				while (ahora < actual + 1) {
-					printf("hola\n");
-						ahora = MPI_Wtime();
-						printf("valor de ahora%f\n", ahora );
-					}*/
+				MPI_Isend(&buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
+				esperar(ahora, 1);
 				MPI_Iprobe(proximo, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
 				if (flag == 1) {
 					MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
@@ -145,7 +133,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 							flag =1;
 						}
 					if (es_ultimo) {
-						printf("proximo: %d de %d \n",proximo, pid);
+				//		printf("proximo: %d de %d \n",proximo, pid);
 						proximo = siguiente_pid(proximo, 0);
 						es_ultimo = 0;
 					}
