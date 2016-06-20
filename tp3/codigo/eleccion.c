@@ -23,8 +23,8 @@ void iniciar_eleccion(t_pid pid, int es_ultimo) {
 	mensaje[0] = pid;
 	mensaje[1] = pid;
 	MPI_Request request;
-	int proximo = siguiente_pid(pid, es_ultimo);
-	MPI_Isend(mensaje, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
+	t_pid proximo = siguiente_pid(pid, es_ultimo);
+	MPI_Isend(&mensaje, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
 	//aca lo q hago es crearme la tupla y mandarla iniciando la eleccion
 }
 
@@ -40,7 +40,6 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 	static t_status status = NO_LIDER;
 	double ahora = MPI_Wtime();
 	double tiempo_maximo = ahora + timeout;
-	//double actual = 0;
 	t_pid proximo = 0;
 	proximo = siguiente_pid(pid, es_ultimo);
 	int flag, origen, cont;
@@ -71,6 +70,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 		if (buffer[0] == pid) {
 			//hay lider
+			printf("pid ejecutando %d mensaje recibido: %d -> %d \n",pid , buffer[0], buffer[1]);
 			if (buffer[1] == pid) {
 				//soy lider cambio status y termino mi eleccion 
 				status = LIDER;
@@ -85,14 +85,19 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 
 				while (flag == 0) { //aca tengo q esperar t segundos q no se como poner eso 
-					printf("mensaje a enviar: %d -> %d de: %d a %d \n", buffer[0], buffer[1], pid , proximo);
+					printf("pid ejecutando: %d mensaje a enviar parte verdadera: %d -> %d de: %d a %d \n", pid, buffer[0], buffer[1], pid , proximo);
 					MPI_Isend(&buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
-					esperar(ahora, 1);
+					esperar(ahora, 2);
 					MPI_Iprobe(proximo, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
 					if (flag == 1) {
 						MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
 					//	printf("recibo ack de: %d soy : %d\n", proximo, pid );
 					} else {
+						MPI_Iprobe(ANY_SOURCE, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
+						if (status_mpi.MPI_SOURCE != proximo && flag == 1) {
+							MPI_Irecv(NULL, 0, MPI_INT, status_mpi.MPI_SOURCE, TAG_ACK, COMM_WORLD, &request1);
+							break;
+						} 
 						if (cont == 1 && proximo + 1 == pid){
 							flag = 1;
 						}
@@ -101,7 +106,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						}else{
 						//para no pasarse de rango cuando ya llego al supuesto final del anillo salgo
 							if (proximo + 1 > buffer[1] && es_ultimo == 0) {
-								printf("mensaje a enviar: %d -> %d de: %d a %d \n", buffer[0], buffer[1], pid , proximo);
+								printf("pid ejecutando: %d mensaje a enviar parte verdadera falsa: %d -> %d de: %d a %d \n",pid, buffer[0], buffer[1], pid , proximo);
 								cont = 1;
 								proximo = 1;
 								if (proximo == pid)	{
@@ -116,6 +121,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 					}
 
 				}
+				proximo = siguiente_pid(pid, es_ultimo);
 			}
 		} else {
 			//todavia no termino
@@ -127,13 +133,20 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			}
 			flag = 0;
 			while (flag == 0) { //aca tengo q esperar t segundos q no se como poner eso 
-				printf("mensaje a enviar: %d -> %d de: %d a %d \n", buffer[0], buffer[1], pid , proximo);
+				printf("pid ejecutando: %d mensaje a enviar parte falsa: %d -> %d de: %d a %d \n", pid, buffer[0], buffer[1], pid , proximo);
 				MPI_Isend(&buffer, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
-				esperar(ahora, 1);
+				esperar(ahora, 2);
 				MPI_Iprobe(proximo, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
 				if (flag == 1) {
 					MPI_Irecv(NULL, 0, MPI_INT, proximo, TAG_ACK, COMM_WORLD, &request1);
+
 				} else {
+					MPI_Iprobe(ANY_SOURCE, TAG_ACK, MPI_COMM_WORLD, &flag, &status_mpi);
+					if (status_mpi.MPI_SOURCE != proximo && flag == 1) {
+						printf("hay ack de otro %d yo soy: %d \n", status_mpi.MPI_SOURCE, pid );
+						MPI_Irecv(NULL, 0, MPI_INT, status_mpi.MPI_SOURCE, TAG_ACK, COMM_WORLD, &request1);
+						break;
+					} 
 					if (cont == 1 && proximo + 1 == pid){
 							flag = 1;
 						}
@@ -141,7 +154,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						proximo = siguiente_pid(proximo, 0);
 					}else{
 						if (proximo + 1 > buffer[1] && es_ultimo == 0) {
-							printf("mensaje a enviar: %d -> %d de: %d a %d \n", buffer[0], buffer[1], pid , proximo);
+							printf("pid ejecutando: %d mensaje a enviar parte falsa falsa: %d -> %d de: %d a %d \n",pid, buffer[0], buffer[1], pid , proximo);
 								cont = 1;
 								proximo = 1;
 								if (proximo == pid)	{
@@ -158,6 +171,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 
 			}
+			proximo = siguiente_pid(pid, es_ultimo);
 
 
 
