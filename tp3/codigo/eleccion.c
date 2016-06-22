@@ -58,12 +58,16 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 		if (flag == 1) {
 			origen = status_mpi.MPI_SOURCE;
 			tag = status_mpi.MPI_TAG;
+
 			if (en_espera == 1){
 				if (tag == TAG_ACK)	{
 					MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
 					en_espera = 0;
+					proximo = siguiente_pid(pid, es_ultimo);
 				}
-			}else{	
+			
+			}else{
+
 				if (tag == TAG_OTORGADO) {
 					MPI_Irecv(&token, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
 					printf("token {%d,%d} pid: %d \n", token[0], token[1], pid );
@@ -82,7 +86,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 							token[1] = token[1];
 							printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, token[0], token[1]);
 							MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
-							//esperar(1);
+							esperar(pid);
 							en_espera = 1;
 
 						}
@@ -94,10 +98,15 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						}
 						printf("token ajeno: %d -> %d token: {%d,%d}\n", pid, proximo, token[0], token[1]);
 						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
-						//esperar(0);
+						esperar(pid);
 						en_espera = 1;
 					}
 					continue;
+				}
+
+				if (tag == TAG_ACK)	{
+					MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
+					en_espera = 0;
 				}
 			}
 		}else{
@@ -105,6 +114,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 				printf("proximo:%d de pid: %d\n", proximo, pid);
 					if (proximo + 1 == pid)	{
 						en_espera = 0;
+						proximo = siguiente_pid(pid, es_ultimo);
 					}else{
 						if (proximo +1 <= token[1])	{
 							proximo = siguiente_pid(proximo,0);
@@ -113,6 +123,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						}
 						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
 						printf("el pid: %d envia token {%d, %d} al proximo: %d \n",pid, token[0],token[1], proximo);
+						esperar(pid);
 					}
 			}
 		}
