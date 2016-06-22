@@ -6,7 +6,7 @@
 
 static t_pid siguiente_pid(t_pid pid, int es_ultimo) {
 	t_pid res = 0; /* Para silenciar el warning del compilador. */
-	//printf("para %d - el ultimo es %d\n", pid, es_ultimo);
+	printf("para %d - el ultimo es %d\n", pid, es_ultimo);
 	if (es_ultimo)
 		res = 1;
 	else
@@ -41,14 +41,19 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 	double ahora = MPI_Wtime();
 	double tiempo_maximo = ahora + timeout;
 	int proximo = siguiente_pid(pid, es_ultimo);
+	int proximo_aux = 1;
 	int flag, origen, tag, en_espera;
 	int token[2];
-	//int token_aux[]
 	MPI_Status status_mpi;
-	MPI_Request request;
-	MPI_Request request1;
+	MPI_Request request[6];
 	en_espera = 0;
+
 	token[0] = token[1] = 1;
+
+	if (status == LIDER){
+		//limpio status por si ya fue usado antes y quedo con LIDER
+		status = NO_LIDER;
+	}
 
 	while (ahora < tiempo_maximo) {
 
@@ -58,73 +63,58 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 		if (flag == 1) {
 			origen = status_mpi.MPI_SOURCE;
 			tag = status_mpi.MPI_TAG;
-
-			if (en_espera == 1){
-				if (tag == TAG_ACK)	{
-					MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
-					en_espera = 0;
-					proximo = siguiente_pid(pid, es_ultimo);
-				}
-			
-			}else{
-
-				if (tag == TAG_OTORGADO) {
-					MPI_Irecv(&token, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
-					printf("token {%d,%d} pid: %d \n", token[0], token[1], pid );
-					printf("ack: %d -> %d \n", pid, origen);
-					MPI_Isend(NULL, 0, MPI_INT, origen, TAG_ACK, COMM_WORLD, &request1);
-					if (token[0] == pid) {
-						if (token[1] == pid) {
-							//soy lider cambio status no se cual 
-							printf("Quien %d con que token {%d,%d}\n",pid, token[0], token[1]);
-							status = LIDER;
-						}
-						if (token[1] > pid) {
-							//el lider esta mas adelante
-							//mando msj con cl cl
-							token[0] = token[1];
-							token[1] = token[1];
-							printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, token[0], token[1]);
-							MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
-							esperar(1/pid);
-							en_espera = 1;
-
-						}
-					}else {
-						//todavia no termino
-						if (token[1] < pid) {
-							//sigue con un nuevo cl
-							token[1] = pid;
-						}
-						printf("token ajeno: %d -> %d token: {%d,%d}\n", pid, proximo, token[0], token[1]);
-						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
-						esperar(1/pid);
+			if (tag == TAG_OTORGADO && en_espera == 1) {
+				MPI_Irecv(&token, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request[0]);
+				printf("ack: %d -> %d \n", pid, origen);
+				MPI_Isend(NULL, 0, MPI_INT, origen, TAG_ACK, COMM_WORLD, &request[1]);
+				if (token[0] == pid) {
+					if (token[1] == pid) {
+						//soy lider cambio status no se cual 
+						status = LIDER;
+						printf("que pid gano: %d\n", pid);
+					}
+					if (token[1] > pid) {
+						//el lider esta mas adelante
+						//mando msj con cl cl
+						token[0] = token[1];
+						token[1] = token[1];
+						printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, token[0], token[1]);
+						proximo_aux = proximo;
+						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request[2]);
+						esperar(2);
 						en_espera = 1;
 					}
-					continue;
+				}else {
+					//todavia no termino
+					if (token[1] < pid) {
+						//sigue con un nuevo cl
+						token[1] = pid;
+					}
+					printf("token ajeno: %d -> %d token: {%d,%d}\n", pid, proximo, token[0], token[1]);
+					proximo_aux = proximo;
+					MPI_Isend(&token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request[3]);
+					esperar(2);
+					en_espera = 1;
 				}
 
-				if (tag == TAG_ACK)	{
-					MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
+				continue;
+			}
+			if (tag == TAG_ACK) {
+				MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request[4]);
+				if (en_espera == 1)	{
 					en_espera = 0;
+					proximo = siguiente_pid(proximo_aux,0);
 				}
 			}
 		}else{
-			if (en_espera == 1){
-				printf("proximo:%d de pid: %d\n", proximo, pid);
-					if (proximo + 1 == pid)	{
-						en_espera = 0;
-						proximo = siguiente_pid(pid, es_ultimo);
-					}else{
-						if (proximo +1 <= token[1])	{
-							proximo = siguiente_pid(proximo,0);
-						}else{
-							proximo = 1;
-						}
-						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
-						printf("el pid: %d envia token {%d, %d} al proximo: %d \n",pid, token[0],token[1], proximo);
-						esperar(1/pid);
-					}
+			if (ahora != MPI_Wtime()){
+				//revisarSiHayQueReenviar();
+			}
+			if (en_espera == 1)	{
+				proximo = siguiente_pid(proximo,0);
+				MPI_Isend(&token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request[5]);
+				printf("el pid: %d envia token {%d, %d} al proximo: %d \n",pid, token[0],token[1], proximo);
+				esperar(2);
 			}
 		}
 
@@ -136,7 +126,6 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 	/* Reporto mi status al final de la ronda. */
 	printf("Proceso %u %s l�der.\n", pid, (status == LIDER ? "es" : "no es"));
-
 }
 
 
