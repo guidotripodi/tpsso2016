@@ -86,7 +86,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 							token[1] = token[1];
 							printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, token[0], token[1]);
 							MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
-							esperar(pid);
+							esperar(1/pid);
 							en_espera = 1;
 
 						}
@@ -98,7 +98,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						}
 						printf("token ajeno: %d -> %d token: {%d,%d}\n", pid, proximo, token[0], token[1]);
 						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
-						esperar(pid);
+						esperar(1/pid);
 						en_espera = 1;
 					}
 					continue;
@@ -123,7 +123,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						}
 						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request1);
 						printf("el pid: %d envia token {%d, %d} al proximo: %d \n",pid, token[0],token[1], proximo);
-						esperar(pid);
+						esperar(1/pid);
 					}
 			}
 		}
