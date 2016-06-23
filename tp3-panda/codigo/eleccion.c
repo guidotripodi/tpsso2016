@@ -71,29 +71,31 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			hijito = fork();
 			if (hijito == 0) {
 				int enviado = 0;
-
-				if (token[0] == pid) {
-					if (token[1] > pid) {
+				int mio[2];
+				mio[0] = token[0];
+				mio[1] = token[1];
+				if (mio[0] == pid) {
+					if (mio[1] > pid) {
 						//el lider esta mas adelante
 						//mando msj con cl cl
 
-						token[0] = token[1];
-						token[1] = token[1];
-						printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, token[0], token[1]);
+						mio[0] = mio[1];
+						mio[1] = mio[1];
+						printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, mio[0], mio[1]);
 
 					}
 				} else {
 					//todavia no termino
-					if (token[1] < pid) {
+					if (mio[1] < pid) {
 						//sigue con un nuevo cl
-						token[1] = pid;
+						mio[1] = pid;
 					}
-					printf("token ajeno: %d -> %d token: {%d,%d}\n", pid, proximo, token[0], token[1]);
+					printf("token ajeno: %d -> %d token: {%d,%d}\n", pid, proximo, mio[0], mio[1]);
 
 				}
 				while (enviado == 0) {
-					printf("envio un token: %d -> %d token: {%d,%d}\n", pid, proximo, token[0], token[1]);
-					MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
+					printf("envio un token: %d -> %d token: {%d,%d}\n", pid, proximo, mio[0], mio[1]);
+					MPI_Isend(&mio, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
 					flag = 0;
 
 					while (flag == 0 && MPI_Wtime() <= ahora + 2) {
