@@ -1,0 +1,10 @@
+
+\subsection{Puntos importantes}
+
+Luego de varios testeos, hemos llegado a la conclusión que al tener varios procesos poniendo a circular una elección, y tener una espera de ack por envio de token a otros procesos, puede generar que varios mensajes se encolen, y si dicha espera aumenta por la falta de respuesta, existe la posibilidad que el proceso ultimo no llegue a desencolar todos los mensajes que recibio y de esta forma no llegar a enterarse que es LIDER. Una de las causas de esto se da ya que al  tener varios procesos de forma aleatoria poniendo a circular elecciones dicha espera puede aumentar por tener a varios procesos esperando ACK.\\\\
+
+Una de las formas que realizamos para que dicha probabilidad disminuya fue antes de enviar un token y quedar en espera chequear si recibimos un nuevo token para responderle al origen y no generar una espera circular entre varios procesos.\\
+
+
+%\end{itemize}
+
