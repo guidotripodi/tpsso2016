@@ -63,10 +63,13 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 		if (flag == 1) {
 			origen = status_mpi.MPI_SOURCE;
 			tag = status_mpi.MPI_TAG;
-			if (tag == TAG_OTORGADO && en_espera == 1) {
+			
+			if (tag == TAG_OTORGADO && en_espera == 0) {
+			
 				MPI_Irecv(&token, 2, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request[0]);
 				printf("ack: %d -> %d \n", pid, origen);
 				MPI_Isend(NULL, 0, MPI_INT, origen, TAG_ACK, COMM_WORLD, &request[1]);
+			
 				if (token[0] == pid) {
 					if (token[1] == pid) {
 						//soy lider cambio status no se cual 
@@ -79,6 +82,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						token[0] = token[1];
 						token[1] = token[1];
 						printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, token[0], token[1]);
+						//me guardo el ultimo proximo antes de arrancar la rueda
 						proximo_aux = proximo;
 						MPI_Isend(token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request[2]);
 						esperar(2);
@@ -96,13 +100,16 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 					esperar(2);
 					en_espera = 1;
 				}
-
 				continue;
 			}
+		
 			if (tag == TAG_ACK) {
+
+				//recibi ack me fijo si estaba o no en la rueda
 				MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request[4]);
 				if (en_espera == 1)	{
 					en_espera = 0;
+					//actualizo al valor real proximo este hay q chequear el limite
 					proximo = siguiente_pid(proximo_aux,0);
 				}
 			}
@@ -110,17 +117,29 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			if (ahora != MPI_Wtime()){
 				//revisarSiHayQueReenviar();
 			}
+		
+		//si estoy en espera y no hay flag true voy al proximo del anillo siempre que sea <= al cl
 			if (en_espera == 1)	{
-				proximo = siguiente_pid(proximo,0);
-				MPI_Isend(&token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request[5]);
-				printf("el pid: %d envia token {%d, %d} al proximo: %d \n",pid, token[0],token[1], proximo);
-				esperar(2);
+				if (proximo + 1 <= token[1]){
+					proximo = siguiente_pid(proximo,0);
+					MPI_Isend(&token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request[5]);
+					printf("el pid: %d envia token {%d, %d} al proximo: %d \n",pid, token[0],token[1], proximo);
+					esperar(2);
+				}else{
+					proximo = 1;
+					MPI_Isend(&token, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request[5]);
+					printf("el pid: %d envia token {%d, %d} al proximo: %d \n",pid, token[0],token[1], proximo);
+					esperar(2);
+				}
+				//si pegue la vuelta y nadie me respondio salgo
+				if (proximo + 1 == pid)	{
+					en_espera = 0;
+					proximo = siguiente_pid(proximo_aux,0);	
+				
+				}
 			}
 		}
-
-
 		/* Actualizo valor de la hora. */
-
 		ahora = MPI_Wtime();
 	}
 
