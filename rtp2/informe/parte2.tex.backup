@@ -1,0 +1,98 @@
+
+\subsection{Ejercicios}
+\begin{itemize}
+ \item 
+\textbf{Ejercicio 2}
+Deber\'{a}n, a su vez, implementar un test para su implementaci\'{o}n de Read-Write Locks (RWLockTest)
+que involucre la creaci\'{o}n de varios threads lectores y escritores donde cada uno de ellos trate
+de hacer un lock sobre un mismo recurso y se vea que no haya deadlocks ni inanici\'{o}n (archivo
+backend-multi/RWLockTest.cpp).
+\end{itemize}
+
+\subsection{Resultados y Conclusiones}
+
+
+\subsubsection[Resolución Ejercicio 2]{Ejercicio 2}
+
+\indent Para mostrar esto creamos una funci\'{o}n que crea varios threads de escritura y lectura. Cada tipo de thread 
+llama a una funci\'{o}n distinta e imprime por pantalla su ID y el valor de una variable, en caso de los threads de 
+escritura estos indican el nuevo valor de la variable mientras que los de lectura imprimen el valor actual de la misma.\\
+\indent Para ello se utilizan las siguientes variables y funciones:\\
+\begin{itemize}
+\item int NUM\_THREADS: Indica la cantidad de threads a crear.
+\item int variable: Esta es el recurso que los threads van a manejar ( ya sea para leerlo o modificarlo).
+\item RWLock para\_variable: Este lock se usa cuando un thread quiere manejar el recurso.
+\item int array[NUM\_THREADS]: Un array de tama\~{n}o igual a cantidad de threads, Se usa para darle a cada thread un ID. 
+La posici\'{o}n del array va a corresponder al thread creado.
+\item pthread\_t threads[NUM\_THREADS]: Un array de tama\~{n}o igual a cantidad de threads a crear, se usa para crear los threads.
+\item void *soy\_lector(void *p\_numero): Funci\'{o}n que va a correr el thread que lea el recurso.
+\item void *soy\_escritor(void *p\_numero): Funci\'{o}n a correr por los threads que modifiquen el valor del recurso.
+\end{itemize}
+
+\begin{verbatim}
+for (i = 0; i < NUM_THREADS; ++i){
+  if(!(i % 2)){
+    pthread_create(&threads[i], NULL, soy_escritor, &array[i]);
+  }else{
+    pthread_create(&threads[i], NULL, soy_lector, &array[i]);
+  }
+}
+\end{verbatim}
+
+Este ciclo es el encargado de crear todos los threads, si el valor de i es impar se crea un thread que va a correr la funci\'{o}n 
+"soy\_escritor", si es par ejecuta "soy\_lector". \\
+Para crear cada thread hay se le pasa un thread, a partir de donde va a correr( en este caso una de las 2 funciones ya mencionadas) 
+y una posici\'{o}n del array distinta a cada uno para poder identificarlos.\\
+
+\begin{verbatim}
+for (int j = 0; j < NUM_THREADS; ++j){
+  pthread_join(threads[j], NULL);
+}
+pthread_exit(NULL);
+return 0;
+\end{verbatim}
+Luego se hace un ciclo para esperar a que terminen todos los threads creados antes de finalizar el programa.\\
+
+\begin{verbatim}
+void *soy_lector(void *p_numero){
+  int mi_numero = *((int *) p_numero);
+
+  for (int j = 0; j < 5; ++j){
+    para_variable.rlock();
+    printf("Lector numero: %d  ", mi_numero);
+    printf(" Leo valor %d\n", variable );
+    para_variable.runlock();
+  }
+  pthread_exit(NULL);
+  return NULL;
+}
+\end{verbatim}
+
+La funci\'{o}n lector corre un ciclo 5 veces. Dentro del ciclo lo primero que hace es usar el lock mientras trabaja con la 
+variable a usar por todos los threads. Luego imprime su ID que se le paso por par\'{a}metro a la funci\'{o}n y el valor 
+actual de la variable y libera el lock. Luego de hacer esto 5 veces termina el thread.\\
+
+
+\begin{verbatim}
+para_variable.wlock();
+variable++;
+printf("Escritor numero: %d  ", mi_numero);
+printf(" cambio valor %d\n", variable );
+para_variable.wunlock();
+\end{verbatim}
+
+La funci\'{o}n "soy\_escritor" es casi igual al de la otra funci\'{o}n salvo porque lo primero que hace al hacer el lock es 
+incrementar en 1 el valor de la variable. \\
+
+\subsubsection{Conclusiones}
+
+Con el c\'{o}digo que implementamos nos aseguramos que no pueda haber deadlock ni inanici\'{o}n. Vamos a pasar a explicar que 
+soluci\'{o}n encontramos para cada uno. \\
+
+\begin{itemize}
+ \item Deadlock: Sabemos que para que haya deadlock hay 4 cosas fundamentales que tienen que cumplirse y a\'{u}n as\'{\i} no 
+ siempre hay. Se observa en el c\'{o}digo explicado mas arriba que solo se usa "RWLock para\_variable" para proteger la secci\'{o}n 
+ cr\'{\i}tica del c\'{o}digo por lo que no hay "Hold and wait" evitando as\'{\i} posible deadlock.\\
+ Ahora vamos a ver que nuestro c\'{o}digo implementado para Read-Write 
+ \item Como vimos en el punto 1 nuestro c\'{o}digo esta libre de inanici\'{o}n.
+ \end{itemize}
