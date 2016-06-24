@@ -20,6 +20,7 @@ void *atendedor_de_jugador(void *socket_param) ;
 
 
 // mensajes recibidos por el server
+int enviar_error_equipo_de_mas(int socket_fd);
 int recibir_nombre_equipo(int socket_fd, char* nombre);
 int recibir_comando(int socket_fd, char* mensaje);
 int parsear_barco(char* mensaje, Casillero& ficha);

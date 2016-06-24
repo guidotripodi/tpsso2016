@@ -18,7 +18,9 @@ unsigned int ancho = -1;
 unsigned int alto = -1;
 vector<vector<RWLock> > rwlocks_tablero_equipo1;
 vector<vector<RWLock> > rwlocks_tablero_equipo2;
-
+pthread_mutex_t equipo1;
+pthread_mutex_t equipo2;
+pthread_mutex_t equipos_mutex;
 
 
 
@@ -29,22 +31,28 @@ RWLock rwlock_tablero_equipo2;
 
 int registrar_equipo(char* nombre) {
 	int res;
+	pthread_mutex_lock(&equipos_mutex);
 	if (equiposeleccionado[0]) {
 		res = strcmp(nombre, equipos[0]);
+		pthread_mutex_unlock(&equipos_mutex);
 		//cerr << "equipo0: " << equipos[0] << "res:" << res << endl;
 		if (res == 0) return 0;
 	} else {
 		strcpy(equipos[0], nombre);
 		equiposeleccionado[0] = true;
+		pthread_mutex_unlock(&equipos_mutex);
 		//cerr << "equipo0: " << equipos[0] <<  endl;
 		return 0;
 	}
+	pthread_mutex_lock(&equipos_mutex);
 	if (equiposeleccionado[1]) {
 		res = strcmp(nombre, equipos[1]);
+		pthread_mutex_unlock(&equipos_mutex);
 		if (res == 0) return 0;
 	} else {
 		strcpy(equipos[1], nombre);
 		equiposeleccionado[1] = true;
+		pthread_mutex_unlock(&equipos_mutex);
 		return 0;
 	}
 	return 1;
@@ -166,7 +174,9 @@ void *atendedor_de_jugador(void *socket_param) {
 
 	if (equiposeleccionado[0] == true && equiposeleccionado[1] == true){
 		if (equipos[0] != nombre_equipo && equipos[1] != nombre_equipo)	{
-			 cerr << "Ya hay dos equipos en la batalla ¡Ingresá un nombre de equipo valido!" << endl;
+			 cerr << "Ya hay dos equipos en la batalla, se cierra el juego" << endl;
+			 enviar_error_equipo_de_mas(socket_fd);
+			 cerrar_servidor(SIGINT);
 		}else{
 			registrar_equipo(nombre_equipo);	
 		}
@@ -177,7 +187,9 @@ void *atendedor_de_jugador(void *socket_param) {
 	//	 cout << "Ya hay dos equipos en la batalla ¡Ingresá un nombre de equipo valido!" << endl;
 	//}
 			soy_equipo_1 = strcmp(equipos[0], nombre_equipo) == 0;
+			pthread_mutex_lock(&equipo1);
 			jugadores++;
+			pthread_mutex_unlock(&equipo1);
 			if (enviar_dimensiones(socket_fd) != 0) {
 				// se produjo un error al enviar. Cerramos todo.
 				terminar_servidor_de_jugador(socket_fd, barco_actual, tablero_equipo1);
@@ -269,9 +281,12 @@ void *atendedor_de_jugador(void *socket_param) {
 				} else {
 					// Estamos listos para la pelea
 					listo = true;
+					//protejo variable global listos jugadores y peleando
+					pthread_mutex_lock(&equipo1);
 					listos ++;
 					if(listos == jugadores) peleando = true;
-					
+					pthread_mutex_unlock(&equipo1);
+
 					if (enviar_ok(socket_fd) != 0)
 						terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
 				}
@@ -533,6 +548,13 @@ int enviar_estaba_golpeado(int socket_fd) {
 int enviar_error(int socket_fd) {
 	char buf[MENSAJE_MAXIMO + 1];
 	sprintf(buf, "ERROR");
+	return enviar(socket_fd, buf);
+}
+
+
+int enviar_error_equipo_de_mas(int socket_fd) {
+	char buf[MENSAJE_MAXIMO + 1];
+	sprintf(buf, "ERROR EQUIPO NO VALIDO");
 	return enviar(socket_fd, buf);
 }
 
