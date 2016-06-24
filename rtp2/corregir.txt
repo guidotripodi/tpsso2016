@@ -11,6 +11,8 @@ Ejercicio 2
 
 2) Tanto los threads de lectura, como los de escritura tienen por muy pocos milisegundos el lock. Por lo tanto, no es posible distinguir si más de un lector accede al mismo tiempo al lock de read(). Implementar un test donde se vea efectivamente que dos threads están dentro del readlock() antes de que alguno de ellos haga unlock();
 
+// PARA ESTO LO UNICO QUE HICE RECIEN ES CAMBIAR EL TEST POR UNO Q HAGA MAS VECES LA LECTURA Y ESCRITURA OSEA TENGO TOMADO EL LOCK POR 20, NO ENTIENDO BIEN SI HAY Q HACER Q MUCHOS LECTORES ESTEN DENTRO OSEA EN EL MEDIO AMBOS O SEPARADOS.
+
 3) La explicación de libre de Deadlock, no me pareció una buena idea. Además, el código tendría deadlock si un mismo proceso hace wlock() y luego rlock() (sin llamar al wunlock antes). Entonces habría que hablar de cómo se espera que se use también la API. Pero no se pedía justicar. (Esto es sólo una aclaración, no hace falta que hagan nada porque no tienen que volver a entregar el informe)  // Este supuestamente no hay que hacer
 
 Ejercicio 3

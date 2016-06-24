@@ -155,6 +155,7 @@ void *atendedor_de_jugador(void *socket_param) {
 	list<Casillero> barco_actual;
 	
 	if (peleando){
+		cerr << "Llegaste tarde ya empezo la batalla" << endl;
 		pthread_exit(NULL);
 		return NULL;
 	}

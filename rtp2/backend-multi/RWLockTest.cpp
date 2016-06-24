@@ -33,10 +33,12 @@ int main(int argc, char* argv[]) {
 void *soy_lector(void *p_numero){
 	int mi_numero = *((int *) p_numero);
 
-	for (int j = 0; j < 10; ++j){
+	for (int j = 0; j < 1; ++j){
 		para_variable.rlock();
+		for (int i = 0; i < 20; ++i){
 		printf("Lector numero: %d  ", mi_numero);
-		printf(" Leo valor %d\n", variable );
+		printf(" Leo valor %d cantidad de veces que tengo el lock sin liberarlo: %d \n\n", variable, i );
+		}
 		para_variable.runlock();
 	}
 	pthread_exit(NULL);
@@ -45,11 +47,13 @@ void *soy_lector(void *p_numero){
 
 void *soy_escritor(void *p_numero){
 	int mi_numero = *((int *) p_numero);
-	for (int j = 0; j < 10; ++j){
+	for (int j = 0; j < 1; ++j){
 		para_variable.wlock();
+		for (int i = 0; i < 20; ++i){
 		variable++;
 		printf("Escritor numero: %d  ", mi_numero);
-		printf(" cambio valor %d\n", variable );
+		printf(" cambio valor %d, cantidad de veces que tengo el lock sin liberarlo: %d \n\n", variable, i );
+		}
 		para_variable.wunlock();
 	}
 	pthread_exit(NULL);
