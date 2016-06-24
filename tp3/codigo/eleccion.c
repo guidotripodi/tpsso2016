@@ -80,7 +80,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						//el lider esta mas adelante
 						//mando msj con cl cl
 						token[0] = token[1];
-						token[1] = token[1];
+
 						printf("el lider es otro: %d -> %d  token: {%d,%d}\n", pid, proximo, token[0], token[1]);
 						//me guardo el ultimo proximo antes de arrancar la rueda
 						proximo_aux = proximo;

@@ -9,24 +9,24 @@
 #define ANY_SOURCE      MPI_ANY_SOURCE
 #define ANY_TAG         MPI_ANY_TAG
 
-/* Enumerado para ver si soy o no líder. */
+/* Enumerado para ver si soy o no lï¿½der. */
 enum status { NO_LIDER, LIDER };
 typedef enum status t_status;
 
-/* PID de elección de líder. */
+/* PID de elecciï¿½n de lï¿½der. */
 typedef unsigned short int t_pid;
 #define	MPI_PID	MPI_UNSIGNED_SHORT
 
-/* Función que maneja la elección de líder por no más
+/* Funciï¿½n que maneja la elecciï¿½n de lï¿½der por no mï¿½s
  * de timeout segundos.
  * pid es el PID del proceso local.
- * es_ultimo indica si éste es el último proceso del anillo o no.
+ * es_ultimo indica si ï¿½ste es el ï¿½ltimo proceso del anillo o no.
  */
 void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout);
-void esperar(int segundos);
+int esperar( int segundos);
 
-/* Función que se encarga de iniciar la elección de líder.
- * Los parámetros tienen la misma semántica que eleccion_lider().
+/* Funciï¿½n que se encarga de iniciar la elecciï¿½n de lï¿½der.
+ * Los parï¿½metros tienen la misma semï¿½ntica que eleccion_lider().
  */
 void iniciar_eleccion(t_pid pid, int es_ultimo);
 
