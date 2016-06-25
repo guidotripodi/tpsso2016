@@ -21,7 +21,8 @@ vector<vector<RWLock> > rwlocks_tablero_equipo2;
 pthread_mutex_t equipo1;
 pthread_mutex_t equipo2;
 pthread_mutex_t equipos_mutex;
-
+pthread_mutex_t peleando_mutex;
+pthread_mutex_t socket_mutex;
 
 
 char equipos[2][21];
@@ -43,7 +44,7 @@ bool registrar_equipo(char* nombre) {
 		//cerr << "equipo0: " << equipos[0] <<  endl;
 		registrado = true;
 	}
-	if (registrado) {
+	if (!registrado) {
 		if (equiposeleccionado[1] ) {
 			res = strcmp(nombre, equipos[1]);
 			registrado = (res == 0);
@@ -102,9 +103,10 @@ int main(int argc, const char* argv[]) {
 		tablero_equipo2[i] = vector<char>(ancho, VACIO);
 		rwlocks_tablero_equipo2[i] = vector<RWLock>(ancho);
 	}
-
+	pthread_mutex_lock(&equipos_mutex);
 	equiposeleccionado[0] = false;
 	equiposeleccionado[1] = false;
+	pthread_mutex_unlock(&equipos_mutex);
 
 	int socketfd_cliente, socket_size;
 	struct sockaddr_in local, remoto;
@@ -137,9 +139,12 @@ int main(int argc, const char* argv[]) {
 	socket_size = sizeof (remoto);
 	int i = 0;
 	while (true) {
-		if ((socketfd_cliente = accept(socket_servidor, (struct sockaddr*) &remoto, (socklen_t*) & socket_size)) == -1)
+		pthread_mutex_lock(&socket_mutex);
+		if ((socketfd_cliente = accept(socket_servidor, (struct sockaddr*) &remoto, (socklen_t*) & socket_size)) == -1){
+			pthread_mutex_unlock(&socket_mutex);
 			cerr << "Error al aceptar conexion" << endl;
-		else {
+		}else {
+			pthread_mutex_unlock(&socket_mutex);
 			pthread_create(&threads[i], NULL, &atendedor_de_jugador, &socketfd_cliente);
 			i++;
 			//atendedor_de_jugador(socketfd_cliente);
@@ -160,11 +165,20 @@ void *atendedor_de_jugador(void *socket_param) {
 	// lista de casilleros que ocupa el barco actual (aún no confirmado)
 	list<Casillero> barco_actual;
 
+	pthread_mutex_lock(&peleando_mutex);
 	if (peleando) {
-		cerr << "Llegaste tarde ya empezo la batalla" << endl;
-		pthread_exit(NULL);
+		pthread_mutex_unlock(&peleando_mutex);
+		cout << "Llegaste tarde ya empezo la batalla" << endl;
+		if (enviar_error(socket_fd) != 0) {
+			// se produjo un error al enviar. Cerramos todo.
+			// no quiero vivir mas
+		}
 		return NULL;
+	}else{
+		pthread_mutex_unlock(&peleando_mutex);
 	}
+
+
 	if (recibir_nombre_equipo(socket_fd, nombre_equipo) != 0) {
 		// el cliente cortó la comunicación, o hubo un error. Cerramos todo.
 		terminar_servidor_de_jugador(socket_fd, barco_actual, tablero_equipo1);
@@ -483,6 +497,7 @@ int enviar_tablero(int socket_fd, bool soy_equipo_1) {
 
 
 	//Si no estoy peleando, muestro los barcos de mi equipo
+	pthread_mutex_lock(&peleando_mutex);
 	if (!peleando) {
 		sprintf(buf, "BARCOS ");
 		if (!soy_equipo_1) {
@@ -491,6 +506,7 @@ int enviar_tablero(int socket_fd, bool soy_equipo_1) {
 			tablero = &tablero_equipo1;
 		}
 		pos = 7;
+		pthread_mutex_unlock(&peleando_mutex);
 	} else {
 		//Sino muestro los resultados de la batalla
 		sprintf(buf, "BATALLA ");
@@ -500,6 +516,7 @@ int enviar_tablero(int socket_fd, bool soy_equipo_1) {
 			tablero = &tablero_equipo2;
 		}
 		pos = 8;
+		pthread_mutex_unlock(&peleando_mutex);
 	}
 
 	for (unsigned int fila = 0; fila < alto; ++fila) {

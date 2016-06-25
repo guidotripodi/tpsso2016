@@ -11,7 +11,7 @@ Ejercicio 2
 
 2) Tanto los threads de lectura, como los de escritura tienen por muy pocos milisegundos el lock. Por lo tanto, no es posible distinguir si más de un lector accede al mismo tiempo al lock de read(). Implementar un test donde se vea efectivamente que dos threads están dentro del readlock() antes de que alguno de ellos haga unlock();
 
-// PARA ESTO LO UNICO QUE HICE RECIEN ES CAMBIAR EL TEST POR UNO Q HAGA MAS VECES LA LECTURA Y ESCRITURA OSEA TENGO TOMADO EL LOCK POR 20, NO ENTIENDO BIEN SI HAY Q HACER Q MUCHOS LECTORES ESTEN DENTRO OSEA EN EL MEDIO AMBOS O SEPARADOS.
+// Le agregue el sleep a este
 
 3) La explicación de libre de Deadlock, no me pareció una buena idea. Además, el código tendría deadlock si un mismo proceso hace wlock() y luego rlock() (sin llamar al wunlock antes). Entonces habría que hablar de cómo se espera que se use también la API. Pero no se pedía justicar. (Esto es sólo una aclaración, no hace falta que hagan nada porque no tienen que volver a entregar el informe)  // Este supuestamente no hay que hacer
 
@@ -19,25 +19,33 @@ Ejercicio 3
 
 4) Que puede pasar con la variable socketfd_cliente si varios clientes se conectan en simultáneo? Expliquen y corrijan.
 
-// NO TENGO IDEA AUN
+- Al no tener sincronizada correctamente la variable del socket existe la posibilidad que dos o mas clientes se conecten en simultaneo y obtener datos inconsistentes del servidor, ademas se puede dar que el numero de thread que se le asigne no sea el indicado y la funcion atendedor_de_jugador que se convierte en el thread no realice lo deseado.
+
+(Esto habria que verificarlo bien)
 
 5) Hay varias funciones que no están sincronizadas y que acceden o modifican cosas globales. Ejemplo, registrar_equipo. Enumerar todas las funciones que necesitan sincronización y sincronizar las partes que sean necesarias.
 
+//Funciones que modifican variables o cosas globales:
+- Main
+- atendedor de jugador
+- registrar equipo
+- Enviar tablero
 // ACA HABRIA Q SINCRONIZAR BIEN CUANDO CAMBIAMOS EL EQUIPOS HAY Q VER SI LO HACEMOS CON WRITELOCK ALGUNO EN ESPECIAL CREO Q TENDRIAMOS Q CREAR UN READ-WRITE LOCK PARA CADA EQUIPO Y DE ESTA FORMA PROTEGER Y SINCRONIZAR CORRECTAMENTE ESTA FUNCION Y LAS VARIABLES Q SE TOCAN
 
-6) Si el nombre del equipo es inválido, podrían enviar un mensaje de error al cliente en vez de explotar.
+6) Si el nombre del equipo es inválido, podrían enviar un mensaje de error al cliente en vez de explotar. //LISTO
 
 7) Por qué es un error no sincronizar el acceso o la modificación de las siguientes variables globales? Explicar y corregir:
 bool peleando;
 int listos;
 int jugadores;
+//LISTO EN TEORIA
 
 - El error que se produce al no sincronizar la modificacion de dichas variables nos puede llevar a casos en los cuales nos llegue un jugador mas y no lo contabilicemos correctamente
 y activemos el booleano peleando antes de tiempo sin tener en cuenta a este ultimo jugador.
 Una de las opciones factibles para la correxion del mismo es utilizar un writelock antes de modificar dichas variables globales.
 
 
-8) Qué pasa si llega un jugador cuando ya se definió que estaban todos listos?
+8) Qué pasa si llega un jugador cuando ya se definió que estaban todos listos? //LISTO EN TEORIA
 
 - Aqui, sera necesario tener correctamente sincronizada la variable listos para saber si posee la misma cantidad de jugadores que listos y el booleano peleando en el estado correcto.
 Para solucionar dicho problema antes de registrar a este nuevo jugador chequeamos el valor del booleano peleando y asi sabemos si es posible el ingreso de un nuevo jugador o no a la partida.
@@ -47,3 +55,8 @@ Para solucionar dicho problema antes de registrar a este nuevo jugador chequeamo
 // ESTA TODAVIA NO TENGO IDEA
 
 10) ¿Por qué imaginan que tuvieron que implementar un RWLock en el punto 1, si sólo utilizaron el wlock()? Pista: en algún lado tiene sentido sincronizar algo que no están sincronizando con rlock(). 
+
+// Tampoco se
+
+
+Quedaria chequear bien el uno, el test ya esta hecho y ver el 9 y 10 el resto ya estaria todo
