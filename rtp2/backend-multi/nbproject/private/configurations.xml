@@ -10,6 +10,8 @@
       <in>Enviar_recibir.h</in>
       <in>RWLock.cpp</in>
       <in>RWLock.h</in>
+      <in>RWLockTest.cpp</in>
+      <in>RWLockTest.h</in>
     </df>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>

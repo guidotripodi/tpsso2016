@@ -5,6 +5,7 @@
       <in>Backend_multi.cpp</in>
       <in>Enviar_recibir.cpp</in>
       <in>RWLock.cpp</in>
+      <in>RWLockTest.cpp</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -40,6 +41,8 @@
       <item path="Enviar_recibir.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="RWLock.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="RWLockTest.cpp" ex="false" tool="1" flavor2="0">
       </item>
     </conf>
   </confs>
