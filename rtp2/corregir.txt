@@ -53,6 +53,9 @@ Para solucionar dicho problema antes de registrar a este nuevo jugador chequeamo
 9) Cuando el comando es MSG_BOMBA, por qué mantienen el lock tanto tiempo? Qué desventaja tiene esto y cómo se podría mejorar?
 
 // ESTA TODAVIA NO TENGO IDEA
+//Para este creo q tendriamos q mover el lock entre los else osea apenas cambiamos el contenido.
+
+- La desventaja que puede ocurrir manteniendo tanto tiempo el lock es que varios jugadores de un mismo equipo no puedan poner bombas en simultaneo.
 
 10) ¿Por qué imaginan que tuvieron que implementar un RWLock en el punto 1, si sólo utilizaron el wlock()? Pista: en algún lado tiene sentido sincronizar algo que no están sincronizando con rlock(). 
 

@@ -1,0 +1,28 @@
+\subsection{Algoritmo}
+
+\begin{itemize}
+ \item \textbf{Implementacion}
+Nuestro algoritmo se implemento de la siguiente manera:\\
+
+Chequeamos si tenemos un mensaje, en caso de tenerlo revisamos el tipo de TAG, para verificar
+si el mismo es un ACK o un token de otro proceso que se encuentra en circulación en el anillo.\\ Una vez realizado dicha verificación, si el mismo es un \textbf{TAG$\_$OTORGADO} (utilizamos dicho tag para enviar y recibir token) procedemos a chequear los valores token[0] y token[1] como se solicito.\\
+Una vez verificado si el token recibido es propio o ajeno y si soy lider o no procedemos a actualizarlo con los respectivos datos:\\
+
+\begin{verbatim}
+	Cuando se recibe un mensaje de eleccion de lider <i, cl>, se actua de la siguiente manera:
+• Hay una eleccion de lıder dando vueltas. status:= no lıder.
+• Si i==ID, la eleccion dio toda la vuelta al anillo, y cl es el lıder. Si cl>ID, significa
+que el lıder esta mas adelante y no sabe que gano. El token debe seguir girando con
+los valores <cl, cl>. Si cl==ID, soy el lıder y debo actualizar status a lıder.
+• Si i!=ID, el token debe seguir girando. Si ID>cl, hay un nuevo candidato a lıder. Es
+decir, cl:= ID.
+\end{verbatim}
+
+Luego procedemos a enviar el token al próximo proceso del anillo, aquí quedamos en espera de un ACK del próximo pid, si pasado el tiempo de espera de 3 segundos no recibimos dicho ACK le enviamos el mismo token al próximo, así hasta que alguno de dichos procesos nos responda. Para evitar irnos de rango damos vueltas entre los procesos que conocemos. Para esto mantenemos un un candidato a ùltimo que a medida que leemos mensajes podemos inferir si hay alguien mas dentro del anillo.\\
+
+
+
+(En la parte 2 de este informe aclararemos ciertos puntos referidos a este tema ya que dicha espera suele perjudicar ampliamente a la hora de que el token viaje por el anillo buscando la elección correcta del líder)\\
+
+
+\end{itemize}
