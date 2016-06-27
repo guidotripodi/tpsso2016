@@ -35,11 +35,12 @@ void *soy_lector(void *p_numero){
 	int mi_numero = *((int *) p_numero);
 	for (int j = 0; j < 1; ++j){
 		para_variable.rlock();
-		for (int i = 0; i < 20; ++i){
+		for (int i = 0; i < 5; ++i){
 		printf("Lector numero: %d  ", mi_numero);
 		printf(" Leo valor %d cantidad de veces que tengo el lock sin liberarlo: %d \n\n", variable, i );
-		sleep(2);
+		sleep(10);
 		}
+		//NO SE SI TENDRIA Q METER EL UNLOCK PARA VER LO DE Q HAYA MAS DE UN LECTOR 
 		para_variable.runlock();
 	}
 	pthread_exit(NULL);
@@ -50,7 +51,7 @@ void *soy_escritor(void *p_numero){
 	int mi_numero = *((int *) p_numero);
 	for (int j = 0; j < 1; ++j){
 		para_variable.wlock();
-		for (int i = 0; i < 20; ++i){
+		for (int i = 0; i < 5; ++i){
 		variable++;
 		printf("Escritor numero: %d  ", mi_numero);
 		printf(" cambio valor %d, cantidad de veces que tengo el lock sin liberarlo: %d \n\n", variable, i );

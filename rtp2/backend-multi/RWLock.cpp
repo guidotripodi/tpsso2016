@@ -15,10 +15,11 @@ RWLock :: ~RWLock() {
 
 void RWLock :: rlock() {
 	pthread_mutex_lock(&turnstile);
-	pthread_mutex_unlock(&turnstile);
 
 	pthread_mutex_lock(&readers_mutex);
 	readers++;
+	//PUSE EN UNLOCK DE TURNSTILE ACA ESTABA ARRIBA ANTES.
+	pthread_mutex_unlock(&turnstile);
 	pthread_mutex_unlock(&readers_mutex);
 }
 

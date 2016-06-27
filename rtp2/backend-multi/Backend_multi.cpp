@@ -355,26 +355,27 @@ void *atendedor_de_jugador(void *socket_param) {
 				if (contenido == BARCO) {
 
 					(*tablero_rival)[ficha.fila][ficha.columna] = BOMBA;
-
+					(*rwlocks_tablero_rival)[ficha.fila][ficha.columna].wunlock();
 					if (enviar_golpe(socket_fd) != 0) {
 						// se produjo un error al enviar. Cerramos todo.
 						terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
 					}
 
 				} else if (contenido == BOMBA) {
+					(*rwlocks_tablero_rival)[ficha.fila][ficha.columna].wunlock();
 					// OK
 					if (enviar_estaba_golpeado(socket_fd) != 0) {
 						// se produjo un error al enviar. Cerramos todo.
 						terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
 					}
 				} else {
+					(*rwlocks_tablero_rival)[ficha.fila][ficha.columna].wunlock();
 					// OK
 					if (enviar_ok(socket_fd) != 0) {
 						// se produjo un error al enviar. Cerramos todo.
 						terminar_servidor_de_jugador(socket_fd, barco_actual, *tablero_jugador);
 					}
 				}
-				(*rwlocks_tablero_rival)[ficha.fila][ficha.columna].wunlock();
 			} else {
 				// ERROR
 				if (enviar_error(socket_fd) != 0) {
