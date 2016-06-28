@@ -176,6 +176,7 @@ void *atendedor_de_jugador(void *socket_param) {
 			// se produjo un error al enviar. Cerramos todo.
 			// no quiero vivir mas
 		}
+		rwlock_peleando.runlock();
 		return NULL;
 	} 
 	rwlock_peleando.runlock();
@@ -502,7 +503,7 @@ int enviar_tablero(int socket_fd, bool soy_equipo_1) {
 	
 
 	//Si no estoy peleando, muestro los barcos de mi equipo
-	pthread_mutex_lock(&peleando_mutex);
+	rwlock_peleando.rlock();
 	if (!peleando) {
 		sprintf(buf, "BARCOS ");
 		pos = 7;
@@ -514,7 +515,7 @@ int enviar_tablero(int socket_fd, bool soy_equipo_1) {
 		pos = 8;
 		
 	}
-	rwlock_peleando.rlock();
+	
 	if (peleando ^ soy_equipo_1) {
 		tablero = &tablero_equipo1;
 		rwlock_tablero = &rwlock_tablero_equipo1;
