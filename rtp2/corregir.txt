@@ -7,15 +7,14 @@ El informe no hace falta que lo reentregen, pero sí que contesten las preguntas
 Ejercicio 1 
 1) En el ReadWrite lock puede haber ejecuciones donde dos procesos distintos obtengan al mismo tiempo el readlock y el writelock. Encontrar, explicar y corregir.
 
-// EN EL RWLOCK.CPP MODIFIQUE EL LOCK DEL TURNSTILE YA QUE ESTABA PUESTO PARA Q TANTO LOS READERS COMO LOS WRITES LO TOMEN, LO PUSE EN ORDEN.
+En la funcion lock del read tomamos el lock de turnstile y lo liberamos y de esa forma se puede obtener al mismo tiempo el lock del read como el del write, por lo que liberamos el lock luego de incrementar el contador de readers. Al salir un reader y liberar el lock de read se chequea si es el ultimo, de ser asi le da el signal al escritor de room_empty.
 
 Ejercicio 2
 
 2) Tanto los threads de lectura, como los de escritura tienen por muy pocos milisegundos el lock. Por lo tanto, no es posible distinguir si más de un lector accede al mismo tiempo al lock de read(). Implementar un test donde se vea efectivamente que dos threads están dentro del readlock() antes de que alguno de ellos haga unlock();
 
-// A ESTE LE AGREGUE EL SLEEP QUE HABLAMOS Y MODIFIQUE UNAS COSAS NO SE SI TENDRIA Q METER EL LOCK EN OTRO LADO PARA Q QUEDEN VARIOS ABIERTOS POR UN TIEMPO
 
-3) La explicación de libre de Deadlock, no me pareció una buena idea. Además, el código tendría deadlock si un mismo proceso hace wlock() y luego rlock() (sin llamar al wunlock antes). Entonces habría que hablar de cómo se espera que se use también la API. Pero no se pedía justicar. (Esto es sólo una aclaración, no hace falta que hagan nada porque no tienen que volver a entregar el informe)  // Este supuestamente no hay que hacer
+3) La explicación de libre de Deadlock, no me pareció una buena idea. Además, el código tendría deadlock si un mismo proceso hace wlock() y luego rlock() (sin llamar al wunlock antes). Entonces habría que hablar de cómo se espera que se use también la API. Pero no se pedía justicar. (Esto es sólo una aclaración, no hace falta que hagan nada porque no tienen que volver a entregar el informe)  
 
 Ejercicio 3
 
@@ -23,48 +22,36 @@ Ejercicio 3
 
 - Al no tener sincronizada correctamente la variable del socket existe la posibilidad que dos o mas clientes se conecten en simultaneo y obtener datos inconsistentes del servidor, ademas se puede dar que el numero de thread que se le asigne no sea el indicado y la funcion atendedor_de_jugador que se convierte en el thread no realice lo deseado.
 
-(Esto habria que verificarlo bien)
-
 5) Hay varias funciones que no están sincronizadas y que acceden o modifican cosas globales. Ejemplo, registrar_equipo. Enumerar todas las funciones que necesitan sincronización y sincronizar las partes que sean necesarias.
 
-//Funciones que modifican variables o cosas globales:
+Las funciones que modifican variables o cosas globales:
 - Main
 - atendedor de jugador
 - registrar equipo
 - Enviar tablero
-// ACA HABRIA Q SINCRONIZAR BIEN CUANDO CAMBIAMOS EL EQUIPOS HAY Q VER SI LO HACEMOS CON WRITELOCK ALGUNO EN ESPECIAL CREO Q TENDRIAMOS Q CREAR UN READ-WRITE LOCK PARA CADA EQUIPO Y DE ESTA FORMA PROTEGER Y SINCRONIZAR CORRECTAMENTE ESTA FUNCION Y LAS VARIABLES Q SE TOCAN
 
-6) Si el nombre del equipo es inválido, podrían enviar un mensaje de error al cliente en vez de explotar. //LISTO
+6) Si el nombre del equipo es inválido, podrían enviar un mensaje de error al cliente en vez de explotar. 
+
+En caso de ser un equipo invalido (tercer equipo) enviamos un mensaje de ERROR por ser un equipo invalido.
 
 7) Por qué es un error no sincronizar el acceso o la modificación de las siguientes variables globales? Explicar y corregir:
 bool peleando;
 int listos;
 int jugadores;
-//LISTO EN TEORIA
+
 
 - El error que se produce al no sincronizar la modificacion de dichas variables nos puede llevar a casos en los cuales nos llegue un jugador mas y no lo contabilicemos correctamente
 y activemos el booleano peleando antes de tiempo sin tener en cuenta a este ultimo jugador.
 Una de las opciones factibles para la correxion del mismo es utilizar un writelock antes de modificar dichas variables globales.
 
 
-8) Qué pasa si llega un jugador cuando ya se definió que estaban todos listos? //LISTO EN TEORIA
+8) Qué pasa si llega un jugador cuando ya se definió que estaban todos listos? 
 
 - Aqui, sera necesario tener correctamente sincronizada la variable listos para saber si posee la misma cantidad de jugadores que listos y el booleano peleando en el estado correcto.
 Para solucionar dicho problema antes de registrar a este nuevo jugador chequeamos el valor del booleano peleando y asi sabemos si es posible el ingreso de un nuevo jugador o no a la partida.
 
 9) Cuando el comando es MSG_BOMBA, por qué mantienen el lock tanto tiempo? Qué desventaja tiene esto y cómo se podría mejorar?
 
-// ESTA TODAVIA NO TENGO IDEA
-
-// ACA PUSE EL UNLOCK ENTRE LOS ELSE PARA Q NO TENGA Q ESPERAR EL ENVIAR ERROR EN CADA UNO
-
-//Para este creo q tendriamos q mover el lock entre los else osea apenas cambiamos el contenido.
-
 - La desventaja que puede ocurrir manteniendo tanto tiempo el lock es que varios jugadores de un mismo equipo no puedan poner bombas en simultaneo.
 
 10) ¿Por qué imaginan que tuvieron que implementar un RWLock en el punto 1, si sólo utilizaron el wlock()? Pista: en algún lado tiene sentido sincronizar algo que no están sincronizando con rlock(). 
-
-// Tampoco se
-
-
-Quedaria chequear bien el uno, el test ya esta hecho y ver el 9 y 10 el resto ya estaria todo

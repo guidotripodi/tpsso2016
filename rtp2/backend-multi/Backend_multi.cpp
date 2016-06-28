@@ -190,7 +190,7 @@ void *atendedor_de_jugador(void *socket_param) {
 
 	if (!registrar_equipo(nombre_equipo)) {
 		//el nombre del equipo es invalido
-		cout << "Ya hay dos equipos en la batalla ¡Ingresá un nombre de equipo valido!" << endl;
+		cout << "Ya hay dos equipos en la batalla" << endl;
 		if (enviar_error(socket_fd) != 0) {
 			// se produjo un error al enviar. Cerramos todo.
 			// no quiero vivir mas
