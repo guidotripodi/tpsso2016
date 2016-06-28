@@ -19,7 +19,7 @@ unsigned int alto = -1;
 vector<vector<RWLock> > rwlocks_tablero_equipo1;
 vector<vector<RWLock> > rwlocks_tablero_equipo2;
 pthread_mutex_t equipo1;
-pthread_mutex_t equipo2;
+
 pthread_mutex_t equipos_mutex;
 //pthread_mutex_t peleando_mutex;
 pthread_mutex_t socket_mutex;
