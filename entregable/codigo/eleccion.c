@@ -46,9 +46,12 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 	int proximo = siguiente_pid(pid, es_ultimo);
 	int flag, origen, tag;
 	int token[2];
+	int n_ranks;
 	MPI_Status status_mpi;
 	MPI_Request request;
 	MPI_Request request1;
+	MPI_Comm_size(MPI_COMM_WORLD, &n_ranks);
+
 	int destino;
 	int candidatoAUltimo; // no quiero enviarle un mensaje a alguien fuera de rango
 	if (es_ultimo == 1) {
@@ -71,6 +74,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 		if (flag == 1) {
 			origen = status_mpi.MPI_SOURCE;
 			tag = status_mpi.MPI_TAG;
+			if (candidatoAUltimo < origen) candidatoAUltimo = origen; // aca me entero que hay alguien mas alla y se convierte en mi nuevo candidato
 			// recibo any_tag si es un ack es un mensaje de alguien que me respondio tarde y lo descarto
 			// si es un token lo proceso
 			if (tag == TAG_OTORGADO) {
@@ -95,7 +99,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 					}
 				} else {
 					//todavia no termino la vuelta en el anillo
-					if (token[1] < pid) {
+					if (token[1] < pid || es_ultimo) {
 						//sigue con un nuevo cl
 						token[1] = pid;
 					}
@@ -104,18 +108,19 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 				
 				destino = proximo;
+				printf("destino %d pid: %d\n", destino, pid );
 				// reenvio el mensaje hasta que alguien me lo reciba, o se acabe mi tiempo de vida
 				while (destino > 0 && MPI_Wtime() < tiempo_maximo) {
 					if (destino == pid) destino = proximo;
-					//printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
+					printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
 					MPI_Isend(&token, 2, MPI_INT, destino, TAG_OTORGADO, COMM_WORLD, &request);
-					flag = esperar(3);
+					flag = esperar(1);
 					//envio mensaje y espero 3 segundos en la funcion 
 					//esperar obtengo el valor del flag en caso de recibir o no ack
 
 					if (flag == 0) {
 						destino++;
-						if (destino > candidatoAUltimo) destino = 1;
+						if (destino > n_ranks) destino = 1;
 					} else {
 						MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &request);
 						destino = 0;
