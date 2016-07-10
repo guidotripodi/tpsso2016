@@ -1,0 +1,10 @@
+Solucione la busqueda y eleccion de lider para un anillo completo.
+Solucione en parte (faltan un par de chequeos) cuando faltan procesos en el medio (utilice rank y no se si se puede para llegar al final del anillo)
+Hice test con anillo completo y matando procesos y agregando y funciona OK.
+
+Para tener en cuenta: Si se pone a circular un token con un proceso q no tiene proximo el token jamas va a viajar, esto a priori es problema de la catedra. EJ:
+1 3 5 10 y se pone a circular en el 5 no va a seguir.
+
+Cualquier otra cosa que veas q este mal corregilo, yo comente la mayoria de las cosas que hice, hay printf para casi todo.
+
+
