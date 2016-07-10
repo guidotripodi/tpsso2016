@@ -40,7 +40,7 @@ int esperar( int segundos) {
 }
 
 void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
-	static t_status status;
+	static t_status status = NO_LIDER;
 	double ahora = MPI_Wtime();
 	double tiempo_maximo = ahora + timeout;
 	int proximo = siguiente_pid(pid, es_ultimo);
@@ -56,8 +56,10 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 	} else {
 		candidatoAUltimo = proximo; // seguro el proximo esta
 	}
-
-	status = NO_LIDER;
+	if (status == LIDER){
+		status = 0;
+		status = NO_LIDER;
+	}
 
 	token[0] = token[1] = 1;
 
@@ -73,7 +75,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			// si es un token lo proceso
 			if (tag == TAG_OTORGADO) {
 				MPI_Irecv(&token, 2, MPI_INT, ANY_SOURCE, TAG_OTORGADO, COMM_WORLD, &request);
-				printf("ack: %d -> %d token: {%d,%d} \n", pid, origen, token[0],token[1]);
+				//printf("ack: %d -> %d token: {%d,%d} \n", pid, origen, token[0],token[1]);
 				MPI_Isend(NULL, 0, MPI_INT, origen, TAG_ACK, COMM_WORLD, &request1);
 				
 				if (candidatoAUltimo < token[1]) candidatoAUltimo = token[1]; // aca me entero que hay alguien mas alla y se convierte en mi nuevo candidato
@@ -84,10 +86,12 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						status = LIDER;
 					}
 					if (token[1] > pid) {
+
 						//el lider esta mas adelante
 						//mando msj con cl cl
+						status = NO_LIDER;
 						token[0] = token[1];
-						printf("el lider es otro token: {%d,%d}\n", token[0], token[1]);
+					//		printf("el lider es otro token: {%d,%d}\n", token[0], token[1]);
 					}
 				} else {
 					//todavia no termino la vuelta en el anillo
@@ -95,7 +99,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						//sigue con un nuevo cl
 						token[1] = pid;
 					}
-					printf("token ajeno: {%d,%d}\n", token[0], token[1]);
+				//	printf("token ajeno: {%d,%d}\n", token[0], token[1]);
 				}
 
 				
@@ -103,9 +107,9 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 				// reenvio el mensaje hasta que alguien me lo reciba, o se acabe mi tiempo de vida
 				while (destino > 0 && MPI_Wtime() < tiempo_maximo) {
 					if (destino == pid) destino = proximo;
-					printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
+					//printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
 					MPI_Isend(&token, 2, MPI_INT, destino, TAG_OTORGADO, COMM_WORLD, &request);
-					flag = esperar(5);
+					flag = esperar(3);
 					//envio mensaje y espero 3 segundos en la funcion 
 					//esperar obtengo el valor del flag en caso de recibir o no ack
 
@@ -122,7 +126,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			}
 			if (tag == TAG_ACK)	{
 				MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &request);
-				printf("recibi ack: %d -> %d  \n", origen, pid);
+				//printf("recibi ack: %d -> %d  \n", origen, pid);
 			}
 
 
