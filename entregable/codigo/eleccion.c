@@ -20,12 +20,31 @@ void iniciar_eleccion(t_pid pid, int es_ultimo) {
 	 HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
 	 */
 	int mensaje[2];
+	int destino = 0;
 	mensaje[0] = pid;
 	mensaje[1] = pid;
 	MPI_Request request;
 	int proximo = siguiente_pid(pid, es_ultimo);
-	//printf("inicio: %d -> %d token: {%d,%d} \n", pid, proximo, mensaje[0],mensaje[1]);
-	MPI_Isend(mensaje, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
+	int flag;
+	destino = proximo;
+	printf("destino %d pid: %d\n", destino, pid );
+	// reenvio el mensaje hasta que alguien me lo reciba, o se acabe mi tiempo de vida
+	while (destino > 0) {
+		if (destino == pid) destino = proximo;
+		//	printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
+			MPI_Isend(mensaje, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
+			flag = esperar(1);
+			//envio mensaje y espero 3 segundos en la funcion 
+			//esperar obtengo el valor del flag en caso de recibir o no ack
+			if (flag == 0) {
+				destino++;
+//			if (destino > n_ranks) destino = 1;
+			} else {
+				MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &request);
+				destino = 0;
+			}
+					//Si flag es 0 tengo que enviarle al proximo sino recibo el ack y salgo del ciclo
+	}
 	//aca lo q hago es crearme la tupla y mandarla iniciando la eleccion
 }
 
@@ -106,7 +125,9 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 				//	printf("token ajeno: {%d,%d}\n", token[0], token[1]);
 				}
 
-				
+				if (proximo > candidatoAUltimo)	{
+					proximo = 1;
+				}
 				destino = proximo;
 				printf("destino %d pid: %d\n", destino, pid );
 				// reenvio el mensaje hasta que alguien me lo reciba, o se acabe mi tiempo de vida
@@ -120,7 +141,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 					if (flag == 0) {
 						destino++;
-						if (destino > n_ranks) destino = 1;
+		//				if (destino > n_ranks) destino = 1;
 					} else {
 						MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &request);
 						destino = 0;
