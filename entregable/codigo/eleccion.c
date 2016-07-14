@@ -4,7 +4,7 @@
 
 static t_pid siguiente_pid(t_pid pid, int es_ultimo) {
 	t_pid res = 0; /* Para silenciar el warning del compilador. */
-	printf("para %d - el ultimo es %d\n", pid, es_ultimo);
+	//printf("para %d - el ultimo es %d\n", pid, es_ultimo);
 	if (es_ultimo)
 		res = 1;
 	else
@@ -16,29 +16,24 @@ static t_pid siguiente_pid(t_pid pid, int es_ultimo) {
 void iniciar_eleccion(t_pid pid, int es_ultimo) {
 	/* Completar ac� el algoritmo de inicio de la elecci�n.
 	 * Si no est� bien documentado, no aprueba.
-	 HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
-	 HAY Q RESOLVER TODO ACA DENTRO SIN TOCAR NADA DE AFUERA!
 	 */
 	int mensaje[2];
 	int destino = 0;
 	mensaje[0] = pid;
 	mensaje[1] = pid;
 	MPI_Request request;
+	MPI_Status status_mpi;
 	int proximo = siguiente_pid(pid, es_ultimo);
 	int flag;
 	destino = proximo;
-	printf("destino %d pid: %d\n", destino, pid );
-	// reenvio el mensaje hasta que alguien me lo reciba, o se acabe mi tiempo de vida
 	while (destino > 0) {
-		if (destino == pid) destino = proximo;
-		//	printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
-			MPI_Isend(mensaje, 2, MPI_INT, proximo, TAG_OTORGADO, COMM_WORLD, &request);
+		if (destino == pid) //si pegue la vuelta y no hay nadie salgo
+			break;
+			MPI_Isend(mensaje, 2, MPI_INT, destino, TAG_OTORGADO, COMM_WORLD, &request);
 			flag = esperar(1);
-			//envio mensaje y espero 3 segundos en la funcion 
 			//esperar obtengo el valor del flag en caso de recibir o no ack
 			if (flag == 0) {
 				destino++;
-//			if (destino > n_ranks) destino = 1;
 			} else {
 				MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &request);
 				destino = 0;
@@ -98,7 +93,6 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 			// si es un token lo proceso
 			if (tag == TAG_OTORGADO) {
 				MPI_Irecv(&token, 2, MPI_INT, ANY_SOURCE, TAG_OTORGADO, COMM_WORLD, &request);
-				//printf("ack: %d -> %d token: {%d,%d} \n", pid, origen, token[0],token[1]);
 				MPI_Isend(NULL, 0, MPI_INT, origen, TAG_ACK, COMM_WORLD, &request1);
 				
 				if (candidatoAUltimo < token[1]) candidatoAUltimo = token[1]; // aca me entero que hay alguien mas alla y se convierte en mi nuevo candidato
@@ -114,7 +108,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						//mando msj con cl cl
 						status = NO_LIDER;
 						token[0] = token[1];
-					//		printf("el lider es otro token: {%d,%d}\n", token[0], token[1]);
+
 					}
 				} else {
 					//todavia no termino la vuelta en el anillo
@@ -122,26 +116,28 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 						//sigue con un nuevo cl
 						token[1] = pid;
 					}
-				//	printf("token ajeno: {%d,%d}\n", token[0], token[1]);
 				}
 
-				if (proximo > candidatoAUltimo)	{
+				if (proximo > n_ranks-1)	{
 					proximo = 1;
 				}
 				destino = proximo;
-				printf("destino %d pid: %d\n", destino, pid );
 				// reenvio el mensaje hasta que alguien me lo reciba, o se acabe mi tiempo de vida
-				while (destino > 0 && MPI_Wtime() < tiempo_maximo) {
-					if (destino == pid) destino = proximo;
+				while (destino > 0) {
+				printf("destino %d pid: %d\n", destino, pid );
+					if (destino == pid) break;
 					printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
 					MPI_Isend(&token, 2, MPI_INT, destino, TAG_OTORGADO, COMM_WORLD, &request);
 					flag = esperar(1);
-					//envio mensaje y espero 3 segundos en la funcion 
+					//envio mensaje y espero 1 segundos en la funcion 
 					//esperar obtengo el valor del flag en caso de recibir o no ack
 
 					if (flag == 0) {
-						destino++;
-		//				if (destino > n_ranks) destino = 1;
+						if (n_ranks-1 > destino)	{
+							destino++;
+						}else{
+							destino = 1;
+						}
 					} else {
 						MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, TAG_ACK, COMM_WORLD, &request);
 						destino = 0;
@@ -160,8 +156,10 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 
 		/* Actualizo valor de la hora. */
-
-		ahora = MPI_Wtime();
+		if (!(es_ultimo == 1 && status == NO_LIDER)){
+			//si soy el ultimo y todavia no giro mi token completo no termino espero
+			ahora = MPI_Wtime();
+		}
 	}
 
 	/* Reporto mi status al final de la ronda. */

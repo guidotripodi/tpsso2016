@@ -1,10 +1,7 @@
-Solucione la busqueda y eleccion de lider para un anillo completo.
-Solucione en parte (faltan un par de chequeos) cuando faltan procesos en el medio (utilice rank y no se si se puede para llegar al final del anillo)
-Hice test con anillo completo y matando procesos y agregando y funciona OK.
 
-Para tener en cuenta: Si se pone a circular un token con un proceso q no tiene proximo el token jamas va a viajar, esto a priori es problema de la catedra. EJ:
-1 3 5 10 y se pone a circular en el 5 no va a seguir.
+Se soluciono la eleccion del lider para todos los procesos que se encuentran lanzados consecutivos. En caso de ir lanzando nuevos procesos o matando los mismos de forma consecutiva funciona correctamente tambien. 
 
-Cualquier otra cosa que veas q este mal corregilo, yo comente la mayoria de las cosas que hice, hay printf para casi todo.
+En caso de que al iniciar una eleccion el proceso que inicia no tiene un consecutivo inmediato se lo manda al siguiente del anillo.
 
-
+En el unico caso que no se llega a encontrar lider, por motivo del tiempo es en el cual hay muchos procesos muertos en el medio, ya que por cada envio de token hay que esperar 1 segundo, esto es muy perjudiciable a la hora del envio del mensaje por todo el anillo. Por ej
+1 3 5 18. Como del 5 al 18 hay 13 procesos muertos y sumado al 1-3 y 3-5 hay dos mas, en total se tardaria 15 segundos en pegar la vuelta al anillo el mensaje lo que puede superar el tiempo maximo de los procesos.
