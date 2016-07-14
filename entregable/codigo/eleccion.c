@@ -22,7 +22,7 @@ void iniciar_eleccion(t_pid pid, int es_ultimo) {
 	mensaje[0] = pid;
 	mensaje[1] = pid;
 	MPI_Request request;
-	MPI_Status status_mpi;
+	//MPI_Status status_mpi;
 	int proximo = siguiente_pid(pid, es_ultimo);
 	int flag;
 	destino = proximo;
@@ -164,6 +164,13 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 
 	/* Reporto mi status al final de la ronda. */
 	printf("Proceso %u %s l�der.\n", pid, (status == LIDER ? "es" : "no es"));
+	
+	//vacio la cola de mensajes si me queda alguno
+	/*int i =0;
+	while(i < candidatoAUltimo){
+		MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
+		i++;
+	}*/
 }
 
 
