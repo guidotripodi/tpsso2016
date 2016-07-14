@@ -125,9 +125,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 				destino = proximo;
 				// reenvio el mensaje hasta que alguien me lo reciba, o se acabe mi tiempo de vida
 				while (destino > 0) {
-				printf("destino %d pid: %d\n", destino, pid );
 					if (destino == pid) break;
-					printf("enviando: %d -> %d {%d,%d}\n", pid, destino, token[0], token[1]);
 					MPI_Isend(&token, 2, MPI_INT, destino, TAG_OTORGADO, COMM_WORLD, &request);
 					flag = esperar(1);
 					//envio mensaje y espero 1 segundos en la funcion 
