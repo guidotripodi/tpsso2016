@@ -101,6 +101,7 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 					if (token[1] == pid) {
 						//soy lider cambio status a LIDER
 						status = LIDER;
+						break;
 					}
 					if (token[1] > pid) {
 
@@ -165,12 +166,4 @@ void eleccion_lider(t_pid pid, int es_ultimo, unsigned int timeout) {
 	/* Reporto mi status al final de la ronda. */
 	printf("Proceso %u %s l�der.\n", pid, (status == LIDER ? "es" : "no es"));
 	
-	//vacio la cola de mensajes si me queda alguno
-	/*int i =0;
-	while(i < candidatoAUltimo){
-		MPI_Irecv(NULL, 0, MPI_INT, ANY_SOURCE, ANY_TAG, COMM_WORLD, &request);
-		i++;
-	}*/
 }
-
-
